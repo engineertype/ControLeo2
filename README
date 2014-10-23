@@ -1,0 +1,20 @@
+***** ControLeo2 Reflow Oven Controller *****
+Coming soon to Kickstarter!
+
+Reflow oven build guide:
+http://www.whizoo.com/reflowoven
+
+
+This is the GitHub source code repository for ControLeo2.  ControLeo2 is an Arduino Leonardo controller with quad relay outputs.
+
+In this folder are:
+1. README - this file
+2. A "ControLeo2” folder.  This is an Arduino library and examples for ContrLeo2
+
+To install the ControLeo library, please refer to:
+http://arduino.cc/en/Guide/Libraries
+
+Peter Easton 2014
+whizoo.com
+
+
