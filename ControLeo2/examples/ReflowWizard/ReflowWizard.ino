@@ -52,6 +52,10 @@
 * Revision  Description
 * ========  ===========
 * 1.0       Initial public release. (21 October 2014)
+* 1.1       Bug fixes (30 December 2014)
+*           - Oven temperature might not reach configured maximum temperature
+*           - Adjusted values so learning happens faster
+*           - Other minor improvements
 *******************************************************************************/
 
 
@@ -90,7 +94,7 @@ void setup() {
 
   // Write the initial message on the LCD screen
   lcdPrintLine(0, "   ControLeo2");
-  lcdPrintLine(1, "Reflow Oven v1.0");
+  lcdPrintLine(1, "Reflow Oven v1.1");
   delay(100);
   playTones(TUNE_STARTUP);
   delay(3000);
@@ -103,7 +107,7 @@ void setup() {
   if (getSetting(SETTING_LEARNING_MODE) == false)
     mode = 2;
   
-  Serial.println("ControLeo2 Reflow Oven controller v1.0");
+  Serial.println("ControLeo2 Reflow Oven controller v1.1");
 }
 
 

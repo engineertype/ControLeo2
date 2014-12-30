@@ -50,11 +50,11 @@ boolean Reflow() {
         break;
       case FAULT_SHORT_VCC:
         lcdPrintLine(1, "Short to VCC");
-        Serial.println("Short to VCC");
         break;
     }
     
     // Abort the reflow
+    Serial.println("Reflow aborted because of thermocouple error!");
     reflowPhase = PHASE_ABORT_REFLOW;
   }
   
@@ -115,19 +115,19 @@ boolean Reflow() {
               setSetting(SETTING_REFLOW_D4_DUTY_CYCLE + i, 0);
               break;
             case TYPE_TOP_ELEMENT:
-              setSetting(SETTING_PRESOAK_D4_DUTY_CYCLE + i, 55);
+              setSetting(SETTING_PRESOAK_D4_DUTY_CYCLE + i, 45);
               setSetting(SETTING_SOAK_D4_DUTY_CYCLE + i, 40);
-              setSetting(SETTING_REFLOW_D4_DUTY_CYCLE + i, 80);
+              setSetting(SETTING_REFLOW_D4_DUTY_CYCLE + i, 60);
               break;
             case TYPE_BOTTOM_ELEMENT:
-              setSetting(SETTING_PRESOAK_D4_DUTY_CYCLE + i, 85);
-              setSetting(SETTING_SOAK_D4_DUTY_CYCLE + i, 60);
-              setSetting(SETTING_REFLOW_D4_DUTY_CYCLE + i, 90);
+              setSetting(SETTING_PRESOAK_D4_DUTY_CYCLE + i, 80);
+              setSetting(SETTING_SOAK_D4_DUTY_CYCLE + i, 70);
+              setSetting(SETTING_REFLOW_D4_DUTY_CYCLE + i, 80);
               break;
             case TYPE_BOOST_ELEMENT:
-              setSetting(SETTING_PRESOAK_D4_DUTY_CYCLE + i, 65);
-              setSetting(SETTING_SOAK_D4_DUTY_CYCLE + i, 30);
-              setSetting(SETTING_REFLOW_D4_DUTY_CYCLE + i, 80);
+              setSetting(SETTING_PRESOAK_D4_DUTY_CYCLE + i, 40);
+              setSetting(SETTING_SOAK_D4_DUTY_CYCLE + i, 35);
+              setSetting(SETTING_REFLOW_D4_DUTY_CYCLE + i, 55);
               break;
             case TYPE_CONVECTION_FAN:
               setSetting(SETTING_PRESOAK_D4_DUTY_CYCLE + i, 100);
@@ -210,7 +210,7 @@ boolean Reflow() {
           // Too little time spent in this phase.  Reduce the duty cycle
           if (learningMode) {
             // Reduce the duty cycle of the elements and abort this test run
-            adjustPhaseDutyCycle(reflowPhase, -2);
+            adjustPhaseDutyCycle(reflowPhase, -4);
             lcdPrintPhaseMessage(reflowPhase, "Too fast");
             lcdPrintLine(1, "Aborting ...");
             reflowPhase = PHASE_ABORT_REFLOW;
@@ -253,9 +253,9 @@ boolean Reflow() {
         if (learningMode) {
           // Keep the element on for longer next time.  Adjust by more if the temperature was pretty low
           if (currentTemperature < phase[reflowPhase].endTemperature - 15)
-            adjustPhaseDutyCycle(reflowPhase, 10);
+            adjustPhaseDutyCycle(reflowPhase, 12);
           else
-            adjustPhaseDutyCycle(reflowPhase, 5);
+            adjustPhaseDutyCycle(reflowPhase, 6);
           lcdPrintPhaseMessage(reflowPhase, "Too slow");
           lcdPrintLine(1, "Aborting ...");
           reflowPhase = PHASE_ABORT_REFLOW;
@@ -263,14 +263,27 @@ boolean Reflow() {
           break;
         }
         else {
-            // It is bad to make adjustments when not in learning mode, because this leads to inconsistent
-            // results.  However, this situation cannot be ignored.  Increase the duty cycle slightly but
-            // don't abort the reflow
-            adjustPhaseDutyCycle(reflowPhase, 1);
-            Serial.println("Duty cycles increased slightly for future runs");
+          // It is bad to make adjustments when not in learning mode, because this leads to inconsistent
+          // results.  However, this situation cannot be ignored.  Increase the duty cycle slightly but
+          // don't abort the reflow
+          adjustPhaseDutyCycle(reflowPhase, 1);
+          Serial.println("Duty cycles increased slightly for future runs");
             
-            // Get out of this phase by simulating the end of the phase
-            phase[reflowPhase].endTemperature = currentTemperature - 2;
+          // Turn all the elements on to get to temperature quickly
+          for (i=0; i<4; i++) {
+            if (outputType[i] != TYPE_UNUSED)
+              phase[reflowPhase].elementDutyCycle[i] = 100;
+          }
+            
+          // Extend this phase by 5 seconds, or abort the reflow if it has taken too long
+          if (phase[reflowPhase].phaseMaxDuration < 200)
+            phase[reflowPhase].phaseMaxDuration += 5;
+          else {
+            lcdPrintPhaseMessage(reflowPhase, "Too slow");
+            lcdPrintLine(1, "Aborting ...");
+            reflowPhase = PHASE_ABORT_REFLOW;
+            Serial.println("Aborting reflow.  Oven cannot reach required temperature!");
+          }
         }
       }
       
@@ -280,7 +293,7 @@ boolean Reflow() {
         if (outputType[i] == TYPE_UNUSED)
           continue;
         // Turn all the elements on at the start of the presoak
-        if (reflowPhase == PHASE_PRESOAK && (currentTime - phaseStartTime) < 30 * MILLIS_TO_SECONDS) {
+        if (reflowPhase == PHASE_PRESOAK && currentTemperature < (phase[reflowPhase].endTemperature * 3 / 5)) {
           digitalWrite(4 + i, HIGH);
           continue;
         }
@@ -396,7 +409,7 @@ boolean Reflow() {
 
 // Adjust the duty cycle for all elements by the given adjustment value
 void adjustPhaseDutyCycle(int phase, int adjustment) {
-  byte newDutyCycle;
+  int newDutyCycle;
   sprintf(debugBuffer, "Adjusting duty cycles for %s phase by %d", phaseDescription[phase], adjustment);
   Serial.println(debugBuffer);
   // Loop through the 4 outputs
