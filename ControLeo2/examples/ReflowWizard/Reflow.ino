@@ -35,7 +35,7 @@ boolean Reflow() {
   int elementDutyStart = 0;
   
   // Read the temperature
-  currentTemperature = thermocouple.readThermocouple(CELSIUS);
+  currentTemperature = getCurrentTemperature();
   if (THERMOCOUPLE_FAULT(currentTemperature)) {
     lcdPrintLine(0, "Thermocouple err");
     Serial.print("Thermocouple Error: ");
@@ -54,7 +54,7 @@ boolean Reflow() {
     }
     
     // Abort the reflow
-    Serial.println("Reflow aborted because of thermocouple error!");
+    printToSerial(STR_REFLOW_ABORTED_BECAUSE_OF_THERMOCOUPLE_ERROR);
     reflowPhase = PHASE_ABORT_REFLOW;
   }
   
@@ -63,7 +63,7 @@ boolean Reflow() {
     reflowPhase = PHASE_ABORT_REFLOW;
     lcdPrintLine(0, "Aborting reflow");
     lcdPrintLine(1, "Button pressed");
-    Serial.println("Button pressed.  Aborting reflow ...");
+    printToSerial(STR_BUTTON_PRESSED_ABORTING_REFLOW);
   }
   
   switch (reflowPhase) {
@@ -74,8 +74,7 @@ boolean Reflow() {
       if (currentTemperature > 50.0) {
         lcdPrintLine(0, "Temp > 50\1C");
         lcdPrintLine(1, "Please wait...");
-        // Print degree Celsius symbol
-        Serial.println("Oven too hot to start reflow.  Please wait ...");
+        printToSerial(STR_OVEN_TOO_HOT_TO_START_REFLOW_PLEASE_WAIT);
         
         // Abort the reflow
         reflowPhase = PHASE_ABORT_REFLOW;
@@ -94,7 +93,7 @@ boolean Reflow() {
         // Tell the user that learning mode is being enabled
         lcdPrintLine(0, "Settings changed");
         lcdPrintLine(1, "Initializing...");
-        Serial.println("Settings changed by user.  Reinitializing element duty cycles and enabling learning mode ...");
+        printToSerial(STR_SETTINGS_CHANGED_BY_USER_REINITIALIZING_DUTY_CYCLES);
         
         // Turn learning mode on
         setSetting(SETTING_LEARNING_MODE, true);
@@ -115,7 +114,7 @@ boolean Reflow() {
               setSetting(SETTING_REFLOW_D4_DUTY_CYCLE + i, 0);
               break;
             case TYPE_TOP_ELEMENT:
-              setSetting(SETTING_PRESOAK_D4_DUTY_CYCLE + i, 45);
+              setSetting(SETTING_PRESOAK_D4_DUTY_CYCLE + i, 40);
               setSetting(SETTING_SOAK_D4_DUTY_CYCLE + i, 40);
               setSetting(SETTING_REFLOW_D4_DUTY_CYCLE + i, 60);
               break;
@@ -126,7 +125,7 @@ boolean Reflow() {
               break;
             case TYPE_BOOST_ELEMENT:
               setSetting(SETTING_PRESOAK_D4_DUTY_CYCLE + i, 40);
-              setSetting(SETTING_SOAK_D4_DUTY_CYCLE + i, 35);
+              setSetting(SETTING_SOAK_D4_DUTY_CYCLE + i, 40);
               setSetting(SETTING_REFLOW_D4_DUTY_CYCLE + i, 55);
               break;
             case TYPE_CONVECTION_FAN:
@@ -149,6 +148,7 @@ boolean Reflow() {
         // While J-STD-20 gives exact phase temperatures, the reading depends very much on the thermocouple used
         // and its location.  Varying the phase temperatures as the max temperature changes allows for thermocouple
         // variation.
+        // Keep in mind that there is a 2C error in the MAX31855, and typically a 3C error in the thermocouple.
         switch(i) {
           case PHASE_PRESOAK:
             phase[i].endTemperature = maxTemperature * 3 / 5; // J-STD-20 gives 150C
@@ -171,7 +171,7 @@ boolean Reflow() {
       if (learningMode) {
         lcdPrintLine(0, "Learning Mode");
         lcdPrintLine(1, "is enabled");
-        Serial.println("Learning mode is enabled.  Duty cycles may be adjusted automatically if necessary");
+        printToSerial(STR_LEARNING_MODE_IS_ENABLED_DUTY_CYCLES_MAY_BE_ADJUSTED_IF_NECCESSARY);
         delay(3000);
       }
       
@@ -207,22 +207,33 @@ boolean Reflow() {
         if (currentTime - phaseStartTime < (phase[reflowPhase].phaseMinDuration * MILLIS_TO_SECONDS)) {
           sprintf(debugBuffer, "Warning: Oven heated up too quickly! Phase took %d seconds.", (currentTime - phaseStartTime) / MILLIS_TO_SECONDS);
           Serial.println(debugBuffer);
-          // Too little time spent in this phase.  Reduce the duty cycle
+          // Too little time was spent in this phase
           if (learningMode) {
-            // Reduce the duty cycle of the elements and abort this test run
-            adjustPhaseDutyCycle(reflowPhase, -4);
-            lcdPrintPhaseMessage(reflowPhase, "Too fast");
-            lcdPrintLine(1, "Aborting ...");
-            reflowPhase = PHASE_ABORT_REFLOW;
-            Serial.println("Adjustments have been made to duty cycles for this phase.  Aborting ...");
-            break;
+            // Were the settings close to being right for this phase?  Within 5 seconds?
+            if (phase[reflowPhase].phaseMinDuration - ((currentTime - phaseStartTime) / 1000) < 5) {
+              // Reduce the duty cycle for the elements for this phase, but continue with this run
+              adjustPhaseDutyCycle(reflowPhase, -4);
+              printToSerial(STR_ADJUSTMENTS_HAVE_BEEN_MADE_TO_DUTY_CYCLES_FOR_THIS_PHASE_CONTINUING);
+            }
+            else {
+              // The oven heated up way too fast
+              adjustPhaseDutyCycle(reflowPhase, -7);
+
+              // Abort this run
+              lcdPrintPhaseMessage(reflowPhase, "Too fast");
+              lcdPrintLine(1, "Aborting ...");
+              reflowPhase = PHASE_ABORT_REFLOW;
+              
+              printToSerial(STR_ADJUSTMENTS_HAVE_BEEN_MADE_TO_DUTY_CYCLES_FOR_THIS_PHASE_ABORTING);
+              break;
+            }
           }
           else {
             // It is bad to make adjustments when not in learning mode, because this leads to inconsistent
             // results.  However, this situation cannot be ignored.  Reduce the duty cycle slightly but
             // don't abort the reflow
             adjustPhaseDutyCycle(reflowPhase, -1);
-            Serial.println("Duty cycles lowered slightly for future runs");
+            printToSerial(STR_DUTY_CYCLES_LOWERED_SLIGHTLY_FOR_FUTURE_RUNS);
           }
         }
         // The temperature is high enough to move to the next phase
@@ -251,15 +262,27 @@ boolean Reflow() {
         Serial.println(currentTemperature);
         // Still in learning mode?
         if (learningMode) {
-          // Keep the element on for longer next time.  Adjust by more if the temperature was pretty low
-          if (currentTemperature < phase[reflowPhase].endTemperature - 15)
-            adjustPhaseDutyCycle(reflowPhase, 12);
-          else
-            adjustPhaseDutyCycle(reflowPhase, 6);
-          lcdPrintPhaseMessage(reflowPhase, "Too slow");
-          lcdPrintLine(1, "Aborting ...");
-          reflowPhase = PHASE_ABORT_REFLOW;
-          Serial.println("Adjustments have been made to duty cycles for this phase.  Aborting ...");
+          double temperatureDelta = phase[reflowPhase].endTemperature - currentTemperature;
+                    
+          if (temperatureDelta <= 3) {
+            // Almost made it!  Make a small adjustment to the duty cycles.  Continue with the reflow
+            adjustPhaseDutyCycle(reflowPhase, 4);
+            printToSerial(STR_ADJUSTMENTS_HAVE_BEEN_MADE_TO_DUTY_CYCLES_FOR_THIS_PHASE_CONTINUING);
+            phase[reflowPhase].phaseMaxDuration += 15;
+          }
+          else {
+            // A more dramatic temperature increase is needed for this phase
+            if (temperatureDelta < 10)
+              adjustPhaseDutyCycle(reflowPhase, 8);
+            else
+              adjustPhaseDutyCycle(reflowPhase, 15);
+              
+            // Abort this run
+            lcdPrintPhaseMessage(reflowPhase, "Too slow");
+            lcdPrintLine(1, "Aborting ...");
+            reflowPhase = PHASE_ABORT_REFLOW;
+            printToSerial(STR_ADJUSTMENTS_HAVE_BEEN_MADE_TO_DUTY_CYCLES_FOR_THIS_PHASE_ABORTING);
+          }
           break;
         }
         else {
@@ -267,7 +290,7 @@ boolean Reflow() {
           // results.  However, this situation cannot be ignored.  Increase the duty cycle slightly but
           // don't abort the reflow
           adjustPhaseDutyCycle(reflowPhase, 1);
-          Serial.println("Duty cycles increased slightly for future runs");
+          printToSerial(STR_DUTY_CYCLES_INCREASED_SLIGHTLY_FOR_FUTURE_RUNS);
             
           // Turn all the elements on to get to temperature quickly
           for (i=0; i<4; i++) {
@@ -282,7 +305,7 @@ boolean Reflow() {
             lcdPrintPhaseMessage(reflowPhase, "Too slow");
             lcdPrintLine(1, "Aborting ...");
             reflowPhase = PHASE_ABORT_REFLOW;
-            Serial.println("Aborting reflow.  Oven cannot reach required temperature!");
+            printToSerial(STR_ABORTING_REFLOW_OVEN_CANNOT_REACH_REQUIRED_TEMPERATURE);
           }
         }
       }
@@ -321,8 +344,8 @@ boolean Reflow() {
         // Update the display
         lcdPrintLine(0, "Reflow");
         lcdPrintLine(1, " ");
-        Serial.println("******* Phase: Waiting *******");
-        Serial.println("Turning all heating elements off ...");
+        printToSerial(STR_PHASE_WAITING);
+        printToSerial(STR_TURNING_ALL_HEATING_ELEMENTS_OFF);
         // Make sure all the elements are off (keep convection fans on)
         for (int i=0; i<4; i++) {
           if (outputType[i] != TYPE_CONVECTION_FAN)
@@ -353,8 +376,8 @@ boolean Reflow() {
         firstTimeInPhase = false;
         // Update the display
         lcdPrintLine(0, "Cool - open door");
-        Serial.println("******* Phase: Cooling *******");
-        Serial.println("Open the oven door ...");
+        printToSerial(STR_PHASE_COOLING);
+        printToSerial(STR_OPEN_THE_DOOR);
         // Play a tune to let the user know the door should be opened
         playTones(TUNE_REFLOW_DONE);
       }
@@ -391,7 +414,7 @@ boolean Reflow() {
       break;
       
     case PHASE_ABORT_REFLOW: // The reflow must be stopped now
-      Serial.println("Reflow is done!");
+      printToSerial(STR_REFLOW_IS_DONE);
       // Turn all elements and fans off
       for (i = 4; i < 8; i++)
         digitalWrite(i, LOW);
@@ -470,6 +493,7 @@ void serialDisplayPhaseData(int phase, struct phaseData *pd, int *outputType) {
 void displayReflowTemperature(unsigned long currentTime, unsigned long startTime, unsigned long phaseTime, double temperature) {
   // Display the temperature on the LCD screen
   displayTemperature(temperature);
+
   // Write the time and temperature to the serial port, for graphing or analysis on a PC
   sprintf(debugBuffer, "%ld, %ld, ", (currentTime - startTime) / MILLIS_TO_SECONDS, (currentTime - phaseTime) / MILLIS_TO_SECONDS);
   Serial.print(debugBuffer);

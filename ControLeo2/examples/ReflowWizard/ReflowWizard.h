@@ -73,5 +73,23 @@ const char *phaseDescription[] = {"", "Presoak", "Soak", "Reflow", "Waiting", "C
 // Thermocouple
 #define THERMOCOUPLE_FAULT(x)                 (x == FAULT_OPEN || x == FAULT_SHORT_GND || x == FAULT_SHORT_VCC)
 
+// Strings stored in Flash
+#define STR_CONTROLEO2_REFLOW_OVEN_CONTROLLER_VX_X                                0
+#define STR_REFLOW_ABORTED_BECAUSE_OF_THERMOCOUPLE_ERROR                          1
+#define STR_BUTTON_PRESSED_ABORTING_REFLOW                                        2
+#define STR_OVEN_TOO_HOT_TO_START_REFLOW_PLEASE_WAIT                              3
+#define STR_SETTINGS_CHANGED_BY_USER_REINITIALIZING_DUTY_CYCLES                   4
+#define STR_LEARNING_MODE_IS_ENABLED_DUTY_CYCLES_MAY_BE_ADJUSTED_IF_NECCESSARY    5
+#define STR_ADJUSTMENTS_HAVE_BEEN_MADE_TO_DUTY_CYCLES_FOR_THIS_PHASE_CONTINUING   6
+#define STR_ADJUSTMENTS_HAVE_BEEN_MADE_TO_DUTY_CYCLES_FOR_THIS_PHASE_ABORTING     7
+#define STR_DUTY_CYCLES_LOWERED_SLIGHTLY_FOR_FUTURE_RUNS                          8
+#define STR_DUTY_CYCLES_INCREASED_SLIGHTLY_FOR_FUTURE_RUNS                        9
+#define STR_ABORTING_REFLOW_OVEN_CANNOT_REACH_REQUIRED_TEMPERATURE                10
+#define STR_PHASE_WAITING                                                         11
+#define STR_TURNING_ALL_HEATING_ELEMENTS_OFF                                      12
+#define STR_PHASE_COOLING                                                         13
+#define STR_OPEN_THE_DOOR                                                         14
+#define STR_REFLOW_IS_DONE                                                        15
+#define FLASH_LAST_STRING                                                         15
 
 #endif // REFLOW_WIZARD_H
