@@ -33,6 +33,8 @@ Reflow Wizard
 *      - Refined learning mode so learning should happen in fewer runs
 *      - Improved loop duration timer to enhance timing
 *      - Moved some strings from RAM to Flash (there is only 2.5Kb of RAM)
+* 1.3  No user-facing changes (19 January 2013)
+*      - Fixed compiler warnings for Arduino 1.5.8
 
 Planned for next release (probably mid-February):
 1. Servo support to open the opening of the oven door

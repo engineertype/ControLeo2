@@ -62,6 +62,8 @@
 *           - Refined learning mode so learning should happen in fewer runs
 *           - Improved loop duration timer to enhance timing
 *           - Moved some strings from RAM to Flash (there is only 2.5Kb of RAM)
+* 1.3       No user-facing changes (19 January 2013)
+*           - Fixed compiler warnings for Arduino 1.5.8
 *******************************************************************************/
 
 
@@ -102,7 +104,7 @@ void setup() {
 
   // Write the initial message on the LCD screen
   lcdPrintLine(0, "   ControLeo2");
-  lcdPrintLine(1, "Reflow Oven v1.2");
+  lcdPrintLine(1, "Reflow Oven v1.3");
   delay(100);
   playTones(TUNE_STARTUP);
   delay(3000);
@@ -130,7 +132,7 @@ void loop()
   static boolean drawMenu = true;
   static boolean showMainMenu = true;
   static int counter = 0;
-  static unsigned long nextLoopTime = 50; // Should be 3000 + 100 + fudge factor + 50 - but no harm making it 5 0!
+  static unsigned long nextLoopTime = 50; // Should be 3000 + 100 + fudge factor + 50 - but no harm making it 50!
   
   if (showMainMenu) {
     if (drawMenu) {

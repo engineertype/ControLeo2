@@ -36,7 +36,7 @@ boolean Testing() {
       break;
     case CONTROLEO_BUTTON_BOTTOM:
       // Move to the next output
-      channel = channel++;
+      channel = channel + 1;
       if (channel == 8) {
         // Turn all the outputs off
         for (int i=4; i<8; i++)

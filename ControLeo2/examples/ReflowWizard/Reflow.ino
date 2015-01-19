@@ -204,8 +204,8 @@ boolean Reflow() {
       // Has the ending temperature for this phase been reached?
       if (currentTemperature >= phase[reflowPhase].endTemperature) {
         // Was enough time spent in this phase?
-        if (currentTime - phaseStartTime < (phase[reflowPhase].phaseMinDuration * MILLIS_TO_SECONDS)) {
-          sprintf(debugBuffer, "Warning: Oven heated up too quickly! Phase took %d seconds.", (currentTime - phaseStartTime) / MILLIS_TO_SECONDS);
+        if (currentTime - phaseStartTime < (unsigned long) (phase[reflowPhase].phaseMinDuration * MILLIS_TO_SECONDS)) {
+          sprintf(debugBuffer, "Warning: Oven heated up too quickly! Phase took %ld seconds.", (currentTime - phaseStartTime) / MILLIS_TO_SECONDS);
           Serial.println(debugBuffer);
           // Too little time was spent in this phase
           if (learningMode) {
@@ -257,7 +257,7 @@ boolean Reflow() {
       }
       
       // Has too much time been spent in this phase?
-      if (currentTime - phaseStartTime > (phase[reflowPhase].phaseMaxDuration * MILLIS_TO_SECONDS)) {
+      if (currentTime - phaseStartTime > (unsigned long) (phase[reflowPhase].phaseMaxDuration * MILLIS_TO_SECONDS)) {
         Serial.print("Warning: Oven heated up too slowly! Current temperature is ");
         Serial.println(currentTemperature);
         // Still in learning mode?
