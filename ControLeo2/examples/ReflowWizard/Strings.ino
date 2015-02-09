@@ -2,7 +2,7 @@
 
 #include <avr/pgmspace.h>
 
-PROGMEM const char  s0[] = "ControLeo2 Reflow Oven controller v1.3";
+PROGMEM const char  s0[] = "ControLeo2 Reflow Oven controller v1.4";
 PROGMEM const char  s1[] = "Reflow aborted because of thermocouple error!";
 PROGMEM const char  s2[] = "Button pressed.  Aborting reflow ...";
 PROGMEM const char  s3[] = "Oven too hot to start reflow.  Please wait ...";

@@ -33,7 +33,7 @@
 * This firmware builds on the work of other talented individuals:
 * ==========================================
 * Rocketscream (www.rocketscream.com)
-* Produced the Arduino reflow oven shield ands code that inspired this project.
+* Produced the Arduino reflow oven shield and code that inspired this project.
 *
 * ==========================================
 * Limor Fried of Adafruit (www.adafruit.com)
@@ -62,8 +62,17 @@
 *           - Refined learning mode so learning should happen in fewer runs
 *           - Improved loop duration timer to enhance timing
 *           - Moved some strings from RAM to Flash (there is only 2.5Kb of RAM)
-* 1.3       No user-facing changes (19 January 2013)
+* 1.3       No user-facing changes (19 January 2015)
 *           - Fixed compiler warnings for Arduino 1.5.8
+* 1.4       Added support for servos (6 February 2015)
+*           - When using a servo, please connect a large capacitor (e.g. 220uF, 16V)
+*             between +5V and GND to avoid a microcontroller reset when the servo
+*             stall current causes the voltage to drop.  Small servos may not need
+*             a capacitor
+*           - Connect the servo to +5V, GND and D3
+*           - The open and close positions are configured in the Settings menu
+*           - The oven door will open when the reflow is done, and close at 50C.
+*             The door is also closed when ControLeo2 is turned on.
 *******************************************************************************/
 
 
@@ -99,12 +108,12 @@ void setup() {
   // Log data to the computer using USB
   Serial.begin(57600);
   
-  // Start taking temperature readings
-  initializeThermocoupleTimer();
+  // Initialize the timer used to take thermocouple readings and control the servo
+  initializeTimer();
 
   // Write the initial message on the LCD screen
   lcdPrintLine(0, "   ControLeo2");
-  lcdPrintLine(1, "Reflow Oven v1.3");
+  lcdPrintLine(1, "Reflow Oven v1.4");
   delay(100);
   playTones(TUNE_STARTUP);
   delay(3000);
@@ -118,6 +127,9 @@ void setup() {
     mode = 2;
   
   printToSerial(STR_CONTROLEO2_REFLOW_OVEN_CONTROLLER_VX_X);
+  
+  // Make sure the oven door is closed
+  setServoPosition(getSetting(SETTING_SERVO_CLOSED_DEGREES), 1000);
 }
 
 
@@ -133,6 +145,7 @@ void loop()
   static boolean showMainMenu = true;
   static int counter = 0;
   static unsigned long nextLoopTime = 50; // Should be 3000 + 100 + fudge factor + 50 - but no harm making it 50!
+  
   
   if (showMainMenu) {
     if (drawMenu) {

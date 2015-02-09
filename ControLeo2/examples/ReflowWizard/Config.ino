@@ -10,6 +10,9 @@ boolean Config() {
   static int type = TYPE_TOP_ELEMENT;
   static boolean drawMenu = true;
   static int maxTemperature;
+  static int servoDegrees;
+  static int servoDegreesIncrement = 5;
+  static int selectedServo = SETTING_SERVO_OPEN_DEGREES;
   boolean continueWithSetup = true;
   
   switch (setupPhase) {
@@ -75,10 +78,49 @@ boolean Config() {
           // Go to the next phase.  Reset variables used in this phase
           setupPhase++;
           drawMenu = true;
-          // Done with setup
-          continueWithSetup = false;
       }
       break;
+    
+    case 2:  // Get the servo open and closed settings
+      if (drawMenu) {
+        drawMenu = false;
+        lcdPrintLine(0, "Door servo");
+        lcdPrintLine(1, selectedServo == SETTING_SERVO_OPEN_DEGREES? "open:" : "closed:");
+        servoDegrees = getSetting(selectedServo);
+        displayServoDegrees(servoDegrees);
+        // Move the servo to the saved position
+        setServoPosition(servoDegrees, 1000);
+      }
+      
+      // Was a button pressed?
+      switch (getButton()) {
+        case CONTROLEO_BUTTON_TOP:
+          // Should the servo increment change direction?
+          if (servoDegrees >= 180)
+            servoDegreesIncrement = -5;
+          if (servoDegrees == 0)
+            servoDegreesIncrement = 5;
+          // Change the servo angle
+          servoDegrees += servoDegreesIncrement;
+          // Move the servo to this new position
+          setServoPosition(servoDegrees, 200);
+          displayServoDegrees(servoDegrees);
+          break;
+        case CONTROLEO_BUTTON_BOTTOM:
+          // Save the servo position
+          setSetting(selectedServo, servoDegrees);
+          // Go to the next phase.  Reset variables used in this phase
+          drawMenu = true;
+          if (selectedServo == SETTING_SERVO_OPEN_DEGREES)
+            selectedServo = SETTING_SERVO_CLOSED_DEGREES;
+          else {
+            selectedServo = SETTING_SERVO_OPEN_DEGREES;
+            // Done with setup
+            continueWithSetup = false;
+          }
+      }
+      break;
+    
   }
   
   // Is setup complete?
@@ -91,6 +133,13 @@ boolean Config() {
 void displayMaxTemperature(int maxTemperature) {
   lcd.setCursor(0, 1);
   lcd.print(maxTemperature);
+}
+
+
+void displayServoDegrees(int degrees) {
+  lcd.setCursor(8, 1);
+  lcd.print(degrees);
+  lcd.print("\1 ");
 }
 
 

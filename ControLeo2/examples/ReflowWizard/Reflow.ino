@@ -378,6 +378,8 @@ boolean Reflow() {
         lcdPrintLine(0, "Cool - open door");
         printToSerial(STR_PHASE_COOLING);
         printToSerial(STR_OPEN_THE_DOOR);
+        // If a servo is attached, use it to open the door over 10 seconds
+        setServoPosition(getSetting(SETTING_SERVO_OPEN_DEGREES), 10000);
         // Play a tune to let the user know the door should be opened
         playTones(TUNE_REFLOW_DONE);
       }
@@ -418,6 +420,8 @@ boolean Reflow() {
       // Turn all elements and fans off
       for (i = 4; i < 8; i++)
         digitalWrite(i, LOW);
+      // Close the oven door now, over 3 seconds
+      setServoPosition(getSetting(SETTING_SERVO_CLOSED_DEGREES), 3000);
       // Start next time with initialization
       reflowPhase = PHASE_INIT;
       // Wait for a bit to allow the user to read the last message

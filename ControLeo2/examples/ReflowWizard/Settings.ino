@@ -63,10 +63,21 @@ void InitializeSettingsIfNeccessary() {
   // Does the EEPROM need to be initialized?
   if (getSetting(SETTING_EEPROM_NEEDS_INIT)) {
     // Initialize all the settings to 0 (false)
-    for (int i=0; i<=SETTING_LAST; i++)
+    for (int i=0; i<1024; i++)
       EEPROM.write(i, 0);
     // Set a reasonable max temperature
     setSetting(SETTING_MAX_TEMPERATURE, 240);
+    // Set the servos to neutral positions (90 degrees)
+    setSetting(SETTING_SERVO_CLOSED_DEGREES, 90);
+    setSetting(SETTING_SERVO_OPEN_DEGREES, 90);
+  }
+  
+  // Legacy support - Initialize the rest of EEPROM for upgrade from 1.x to 1.4
+  if (getSetting(SETTING_SERVO_OPEN_DEGREES) > 180) {
+    for (int i=SETTING_SERVO_OPEN_DEGREES; i<1024; i++)
+      EEPROM.write(i, 0);
+    setSetting(SETTING_SERVO_CLOSED_DEGREES, 90);
+    setSetting(SETTING_SERVO_OPEN_DEGREES, 90);
   }
 }
 

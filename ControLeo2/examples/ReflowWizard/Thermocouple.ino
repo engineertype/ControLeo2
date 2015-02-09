@@ -2,12 +2,10 @@
 // Instead of getting instantaneous readings from the thermocouple, get an average
 // Also, some convection ovens have noisy fans that generate spurious short-to-ground and 
 // short-to-vcc errors.  This will help to eliminate those.
-//
-// With a 16MHz clock, we set the prescaler to 1024.  This gives a timer speed of 16,000,000 / 1024 = 15,625. This means
-// the timer counts from 0 to 15,625 in one second.  We'd like to sample the MAX31855 every 125ms (0.125s) or 8 times per
-// second so we set the compare register OCR1A to 15,625 * 0.125 = 1953.
+// takeCurrentThermocoupleReading() is called from the Timer 1 interrupt (see "Servo" tab).  It is
+// called 5 times per second.
 
-#define NUM_READINGS           4  // Number of readings to average the temperature over (4 readings = 1/2 second)
+#define NUM_READINGS           5  // Number of readings to average the temperature over (5 readings = 1 second)
 #define ERROR_THRESHOLD        5  // Number of consecutive short-to-xxx faults before a fault is returned
 
 
@@ -18,30 +16,12 @@ volatile float temperatureError;
 ControLeo2_MAX31855 thermocouple;
 
 
-// Initialize Timer1
-void initializeThermocoupleTimer(void) {
-  cli();                                // Disable global interrupts
-  ADMUX  = 0;                           // Initialize the MUX and enable ADC and set frequency
-  ADCSRA = (1<<ADEN) | (1<<ADPS2); 
-  TCCR1A = 0;                           // Initialize Timer1 TCCR1A register to 0
-  TCCR1B = 0;                           // Same for TCCR1B
-  OCR1A = 1953;                         // Set compare match register to desired timer count
-  TCCR1B |= (1 << WGM12);               // Turn on CTC mode
-  TCCR1B |= (1 << CS10) + (1 << CS12);  // Set CS10-CS12 for 1024 prescaler
-  TIMSK1 |= (1 << OCIE1A);              // Enable timer compare interrupt
-  sei();                                // Enable global interrupts
-  
-  // The array of temperatures should be initialized here, but the reality is that 3*8 = 24 readings
-  // will be taken before the splash screen finishes displaying.
-}
-
-
-// Timer ISR
-ISR(TIMER1_COMPA_vect)
+// This function is called every 200ms from the Timer 1 (servo) interrupt
+void takeCurrentThermocoupleReading()
 {
   volatile static int readingNum = 0;
     
-  // The timer has fired.  It has been 0.125 seconds since the previous reading was taken
+  // The timer has fired.  It has been 0.2 seconds since the previous reading was taken
   // Take a thermocouple reading
   float temperature = thermocouple.readThermocouple(CELSIUS);
   
@@ -67,6 +47,7 @@ ISR(TIMER1_COMPA_vect)
     temperatureErrorCount = 0;
   }
 }
+
 
 
 // Routine used by the main app to get temperatures
