@@ -49,8 +49,10 @@ Reflow Wizard
 * 1.5 Minor improvements (15 July 2015)
 *      - Made code easier to read by using “F” macro for strings stored in flash
 *      - Minor adjustments to reflow values 
-*      - Restrict the maximum duty cycle for the boost element to 60%.  It should never need more than this!
-*      - Make thermocouple more tolerant of transient errors, including FAULT_OPEN
+*      - Restrict the maximum duty cycle for the boost element to 60%.  It
+*        should never need more than this!
+*      - Make thermocouple more tolerant of transient errors, including
+*        FAULT_OPEN
  
 
 Oven door servo:
