@@ -46,12 +46,18 @@ Reflow Wizard
 *      - The open and close positions are configured in the Settings menu
 *      - The oven door will open when the reflow is done, and close at 50C.
 *        The door is also closed when ControLeo2 is turned on.
+* 1.5 Minor improvements (15 July 2015)
+*      - Made code easier to read by using “F” macro for strings stored in flash
+*      - Minor adjustments to reflow values 
+*      - Restrict the maximum duty cycle for the boost element to 60%.  It should never need more than this!
+*      - Make thermocouple more tolerant of transient errors, including FAULT_OPEN
+ 
 
 Oven door servo:
 ================
-Version 1.4 adds support for a servo to open the oven door when the reflow is done.  The door should be opened 1” - 2” so the temperature drop does not exceed 6°C/second.  Small servos (like the TG9) are probably powerful enough to open the oven door. Large servos (like the MG945 with metal gears) will work too - with a caveat.  Large servos mean large stall currents which can cause the voltage to the microcontroller to drop and cause a brown-out reset.  Regardless of the servo used, it is recommended that you place a large capacitor (e.g. 220uF, 16V) between +5V and GND.
+Version 1.4 adds support for a servo to open the oven door when the reflow is done.  The door should be opened 1” - 2” so the temperature drop does not exceed 6°C/second.  Small servos (like the TG9) are probably powerful enough to open the oven door. Large servos (like the MG945 with metal gears) will work too - with a caveat.  Large servos mean large stall currents which can cause the voltage to the microcontroller to drop and cause a brown-out reset.  To prevent this from happening, it is recommended that you place a large capacitor (e.g. 220uF, 16V) between +5V and GND.
 
-The power supply used to power ControLeo2 should provide at least 1000mA, but preferably 1.5A to even 2A.  The power supplies provided in the ControLeo2 oven build kit are 2A. 
+The power supply used to power ControLeo2 should provide at least 1000mA, but preferably 1.5A or even 2A.  The power supplies provided in the ControLeo2 oven build kit are 2A. 
 
 
 Peter Easton 2015

@@ -5,8 +5,8 @@
 // takeCurrentThermocoupleReading() is called from the Timer 1 interrupt (see "Servo" tab).  It is
 // called 5 times per second.
 
-#define NUM_READINGS           5  // Number of readings to average the temperature over (5 readings = 1 second)
-#define ERROR_THRESHOLD        5  // Number of consecutive short-to-xxx faults before a fault is returned
+#define NUM_READINGS           5   // Number of readings to average the temperature over (5 readings = 1 second)
+#define ERROR_THRESHOLD        15  // Number of consecutive faults before a fault is returned
 
 
 // Store the temperatures as they are read
@@ -27,17 +27,10 @@ void takeCurrentThermocoupleReading()
   
   // Is there an error?
   if (THERMOCOUPLE_FAULT(temperature)) {
-    if (temperature == FAULT_SHORT_GND || temperature == FAULT_SHORT_VCC) {
-      // Noise can cause spurious short faults.  These are typically caused by the convection fan
-      if (temperatureErrorCount < ERROR_THRESHOLD)
-        temperatureErrorCount++;
-      temperatureError = temperature;
-    }
-    else {
-      // Must be an "open" fault.  Report it immediately
-      temperatureErrorCount = ERROR_THRESHOLD;
-      temperatureError = temperature; // FAULT_OPEN
-    }
+    // Noise can cause spurious short faults.  These are typically caused by the convection fan
+    if (temperatureErrorCount < ERROR_THRESHOLD)
+      temperatureErrorCount++;
+    temperatureError = temperature;
   }
   else {
     // There is no error.  Save the temperature

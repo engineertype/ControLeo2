@@ -41,7 +41,7 @@ void setSetting(int settingNum, int value) {
       EEPROM.write(SETTING_SETTINGS_CHANGED, true);
       EEPROM.write(SETTING_LEARNING_MODE, true);
       EEPROM.write(settingNum, value);
-      Serial.println("Settings changed!  Duty cycles have been reset and learning mode has been enabled");
+      Serial.println(F("Settings changed!  Duty cycles have been reset and learning mode has been enabled"));
       break;
       
     case SETTING_MAX_TEMPERATURE:
