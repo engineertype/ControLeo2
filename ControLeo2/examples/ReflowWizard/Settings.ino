@@ -20,6 +20,12 @@ int getSetting(int settingNum) {
   // The maximum temperature has an offset to allow it to be saved in 8-bits (0 - 255)
   if (settingNum == SETTING_MAX_TEMPERATURE)
     return val + SETTING_TEMPERATURE_OFFSET;
+    
+  if (settingNum == SETTING_BAKE_TEMPERATURE)
+    return val * SETTING_BAKE_TEMPERATURE_STEP;
+
+  if (settingNum == SETTING_BAKE_DURATION)
+    return val * SETTING_BAKE_DURATION_STEP;
 
   return val;
 }
@@ -52,6 +58,14 @@ void setSetting(int settingNum, int value) {
       EEPROM.write(settingNum, value - SETTING_TEMPERATURE_OFFSET);
       break;
       
+    case SETTING_BAKE_TEMPERATURE:
+      EEPROM.write(settingNum, value / SETTING_BAKE_TEMPERATURE_STEP);
+      break;
+
+    case SETTING_BAKE_DURATION:
+      EEPROM.write(settingNum, value / SETTING_BAKE_DURATION_STEP);
+      break;
+
     default:
       EEPROM.write(settingNum, value);
       break;

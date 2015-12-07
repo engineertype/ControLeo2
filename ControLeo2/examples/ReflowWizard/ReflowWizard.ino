@@ -1,3 +1,5 @@
+
+
 /*******************************************************************************
 * ControLeo Reflow Oven Controller
 * Author: Peter Easton
@@ -134,8 +136,9 @@ void setup() {
 
 
 // The main menu has 3 options
-boolean (*action[NO_OF_MODES])() = {Testing, Config, Reflow};
-const char* modes[NO_OF_MODES] = {"Test Outputs?", "Setup?", "Start Reflow?"};
+boolean (*action[NO_OF_MODES])() = {Testing, Config, Reflow, Bake};
+const char* modes[NO_OF_MODES] = {"Test Outputs?", "Setup?", "Start Reflow?", "Start Baking?"};
+unsigned long actionInterval[NO_OF_MODES] = {50, 50, 50, 5};
 
 
 // This loop is executed 20 times per second
@@ -145,9 +148,11 @@ void loop()
   static boolean showMainMenu = true;
   static int counter = 0;
   static unsigned long nextLoopTime = 50; // Should be 3000 + 100 + fudge factor + 50 - but no harm making it 50!
+  static unsigned long loopInterval = 50;
   
   
   if (showMainMenu) {
+    loopInterval = 50;
     if (drawMenu) {
       drawMenu = false;
       lcdPrintLine(0, modes[mode]);
@@ -173,6 +178,7 @@ void loop()
     }
   }
   else {
+    loopInterval = actionInterval[mode];
     // Go to the mode's menu system
     if ((*action[mode])() == NEXT_MODE)
       showMainMenu = true;
@@ -181,7 +187,7 @@ void loop()
   // Execute this loop 20 times per second (every 50ms)
   if (millis() < nextLoopTime)
     delay(nextLoopTime - millis());
-  nextLoopTime += 50;
+  nextLoopTime += loopInterval;
 }
 
 
@@ -250,5 +256,4 @@ void displayTemperature(double temperature) {
   // Print degree Celsius symbol
   lcd.print("\1C ");  
 }
-
 
