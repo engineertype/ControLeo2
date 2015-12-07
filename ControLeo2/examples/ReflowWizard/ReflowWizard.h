@@ -6,7 +6,8 @@
 #define MODE_TESTING                         0
 #define MODE_CONFIG                          1
 #define MODE_REFLOW                          2
-#define NO_OF_MODES                          3
+#define MODE_BAKE                            3
+#define NO_OF_MODES                          4
 
 #define NEXT_MODE                            false
 
@@ -30,7 +31,15 @@ const char *outputDescription[NO_OF_TYPES] = {"Unused", "Top", "Bottom", "Boost"
 #define PHASE_COOLING_BOARDS_OUT             6    // Boards can be removed. Remain in this state until another reflow can be started at 50C
 #define PHASE_ABORT_REFLOW                   7    // The reflow was aborted or completed.
 
+#define BAKING_PHASE_INIT                    0    // Initialize baking, check oven temperature
+#define BAKING_PHASE_HEATUP                  1    // As long as the oven hasn't reached baking (temperature-10°)
+#define BAKING_PHASE_BAKE                    2    // The main baking phase. Just keep the oven temperature constant
+#define BAKING_PHASE_COOLDOWN                3    // Wait till the oven has cooled down to 50°C
+#define BAKING_PHASE_ABORT                   4    // Baking was aborted or completed
+
 const char *phaseDescription[] = {"", "Presoak", "Soak", "Reflow", "Waiting", "Cooling", "Cool - open door", "Abort"};
+
+const char *bakingPhaseDescription[] = {"", "Heatup", "Baking", "Cooling", "Abort"};
 
 // Tunes used to indication various actions or status
 #define TUNE_STARTUP                         0
@@ -66,9 +75,13 @@ const char *phaseDescription[] = {"", "Presoak", "Soak", "Reflow", "Waiting", "C
 #define SETTING_REFLOW_D7_DUTY_CYCLE          22   // Duty cycle (0-100) that D4 must be used during reflow
 #define SETTING_SERVO_OPEN_DEGREES            23   // The position the servo should be in when the door is open
 #define SETTING_SERVO_CLOSED_DEGREES          24   // The position the servo should be in when the door is closed
+#define SETTING_BAKE_TEMPERATURE              25   // The bakeing temperature (divided by 5)
+#define SETTING_BAKE_DURATION                 26   // The bakeing duration (divided by 30)
 
 
 #define SETTING_TEMPERATURE_OFFSET            150  // To allow temperature to be saved in 8-bits (0-255)
+#define SETTING_BAKE_TEMPERATURE_STEP         5    // Allows to store the whole baking temperature range in one byte
+#define SETTING_BAKE_DURATION_STEP            30   // Allows to store the whole baking duration range (30s to 2h) in one byte
 
 
 // Thermocouple
