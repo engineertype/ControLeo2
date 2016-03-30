@@ -1,9 +1,6 @@
 ControLeo2 Reflow Oven Controller
 =================================
 
-This project was on Kickstarter:
-https://www.kickstarter.com/projects/1471240030/controleo2-reflow-oven
-
 Reflow oven build guide:
 http://www.whizoo.com/reflowoven
 
@@ -53,7 +50,15 @@ Reflow Wizard
 *        should never need more than this!
 *      - Make thermocouple more tolerant of transient errors, including
 *        FAULT_OPEN
- 
+* 1.6 Added ability to bake (29 March 2016)
+*      - Ability to bake was requested by a number of users, and was implemented
+*        by Bernhard Kraft and Mark Foster.  Bernhard's implementation has been
+*        added to the code base.  This is a simple algorithm that only implements
+*        the ”P” (proportional) of the PID algorithm.  Temperatures may overshoot
+*        initially, but for the rest of the baking time (up to 18 hours) the
+*        temperature will be a few degrees below the target temperature.
+*      - Added option to Setup menu to restart learning mode.
+*      - Added option to Setup menu to reset to factory mode (erase everything) 
 
 Oven door servo:
 ================
@@ -62,7 +67,7 @@ Version 1.4 adds support for a servo to open the oven door when the reflow is do
 The power supply used to power ControLeo2 should provide at least 1000mA, but preferably 1.5A or even 2A.  The power supplies provided in the ControLeo2 oven build kit are 2A. 
 
 
-Peter Easton 2015
+Peter Easton 2016
 whizoo.com
 
 

@@ -13,7 +13,9 @@ boolean Config() {
   static int servoDegrees;
   static int servoDegreesIncrement = 5;
   static int selectedServo = SETTING_SERVO_OPEN_DEGREES;
-  boolean continueWithSetup = true;
+  static int bakeTemperature;
+  static int bakeDuration;
+  int oldSetupPhase = setupPhase;
   
   switch (setupPhase) {
     case 0:  // Set up the output types
@@ -48,7 +50,6 @@ boolean Config() {
           
           // Go to the next phase.  Reset variables used in this phase
           setupPhase++;
-          drawMenu = true;
           output = 4;
           break;
       }
@@ -75,9 +76,8 @@ boolean Config() {
         case CONTROLEO_BUTTON_BOTTOM:
           // Save the temperature
           setSetting(SETTING_MAX_TEMPERATURE, maxTemperature);
-          // Go to the next phase.  Reset variables used in this phase
+          // Go to the next phase
           setupPhase++;
-          drawMenu = true;
       }
       break;
     
@@ -110,23 +110,133 @@ boolean Config() {
           // Save the servo position
           setSetting(selectedServo, servoDegrees);
           // Go to the next phase.  Reset variables used in this phase
-          drawMenu = true;
-          if (selectedServo == SETTING_SERVO_OPEN_DEGREES)
+          if (selectedServo == SETTING_SERVO_OPEN_DEGREES) {
             selectedServo = SETTING_SERVO_CLOSED_DEGREES;
+            drawMenu = true;
+          }
           else {
             selectedServo = SETTING_SERVO_OPEN_DEGREES;
-            // Done with setup
-            continueWithSetup = false;
+            // Go to the next phase
+            setupPhase++;
           }
       }
       break;
-    
+
+    case 3:  // Get bake temperature
+      if (drawMenu) {
+        drawMenu = false;
+        lcdPrintLine(0, "Bake temperature");
+        lcdPrintLine(1, "");
+        bakeTemperature = getSetting(SETTING_BAKE_TEMPERATURE);
+        lcd.setCursor(0, 1);
+        lcd.print(bakeTemperature);
+        lcd.print("\1C ");
+      }
+
+      // Was a button pressed?
+      switch (getButton()) {
+        case CONTROLEO_BUTTON_TOP:
+          // Increase the temperature
+          bakeTemperature += SETTING_BAKE_TEMPERATURE_STEP;
+          if (bakeTemperature > 280)
+            bakeTemperature = 40;
+          lcd.setCursor(0, 1);
+          lcd.print(bakeTemperature);
+          lcd.print("\1C ");
+          break;
+        case CONTROLEO_BUTTON_BOTTOM:
+          // Save the temperature
+          setSetting(SETTING_BAKE_TEMPERATURE, bakeTemperature);
+          // Go to the next phase
+          setupPhase++;
+      }
+      break;
+
+    case 4:  // Get bake duration
+      if (drawMenu) {
+        drawMenu = false;
+        lcdPrintLine(0, "Bake duration");
+        lcdPrintLine(1, "");
+        bakeDuration = getSetting(SETTING_BAKE_DURATION);
+        displayDuration(getBakeSeconds(bakeDuration));
+      }
+
+      // Was a button pressed?
+      switch (getButton()) {
+        case CONTROLEO_BUTTON_TOP:
+          // Increase the duration
+          bakeDuration = ++bakeDuration % SETTING_BAKE_MAX_DURATION;
+          displayDuration(getBakeSeconds(bakeDuration));
+          break;
+        case CONTROLEO_BUTTON_BOTTOM:
+          // Save the temperature
+          setSetting(SETTING_BAKE_DURATION, bakeDuration);
+          // Go to the next phase
+          setupPhase++;
+      }
+      break;      
+
+    case 5: // Restart learning mode
+      if (drawMenu) {
+        drawMenu = false;
+        if (getSetting(SETTING_LEARNING_MODE) == false) {
+          lcdPrintLine(0, "Restart learning");
+          lcdPrintLine(1, "mode?      No ->");
+        }
+        else
+        {
+          lcdPrintLine(0, "Oven is in");
+          lcdPrintLine(1, "learning mode");
+        }
+      }
+      
+      // Was a button pressed?
+      switch (getButton()) {
+        case CONTROLEO_BUTTON_TOP:
+          // Turn learning mode on
+          setSetting(SETTING_LEARNING_MODE, true);
+          drawMenu = true;
+          break;
+        case CONTROLEO_BUTTON_BOTTOM:
+            // Go to the next phase
+            setupPhase++;
+       }
+      break;
+
+     case 6: // Restore to factory settings
+      if (drawMenu) {
+        drawMenu = false;
+        lcdPrintLine(0, "Restore factory");
+        lcdPrintLine(1, "settings?  No ->");
+      }
+      
+      // Was a button pressed?
+      switch (getButton()) {
+        case CONTROLEO_BUTTON_TOP:
+          // Reset EEPROM to factory
+          lcdPrintLine(0, "Please wait ...");
+          lcdPrintLine(1, "");
+          setSetting(SETTING_EEPROM_NEEDS_INIT, true);
+          InitializeSettingsIfNeccessary();
+
+          // Intentional fall-through
+        case CONTROLEO_BUTTON_BOTTOM:
+            // Go to the next phase
+            setupPhase++;
+       }
+      break;
+
+   
   }
   
-  // Is setup complete?
-  if (!continueWithSetup)
+  // Does the menu option need to be redrawn?
+  if (oldSetupPhase != setupPhase)
+    drawMenu = true;
+  if (setupPhase > 6) {
     setupPhase = 0;
-  return continueWithSetup;
+    return false;
+  }
+  return true;
 }
 
 
@@ -140,6 +250,19 @@ void displayServoDegrees(int degrees) {
   lcd.setCursor(8, 1);
   lcd.print(degrees);
   lcd.print("\1 ");
+}
+
+
+void displayDuration(uint16_t duration) {
+  lcd.setCursor(0, 1);
+  if (duration >= 3600) {
+    lcd.print((duration / 3600));
+    lcd.print("h ");
+  }
+  duration = duration % 3600;
+  lcd.print((duration / 60));
+  lcd.print("m    ");
+
 }
 
 

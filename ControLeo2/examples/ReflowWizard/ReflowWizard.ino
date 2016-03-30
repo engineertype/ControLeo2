@@ -73,6 +73,22 @@
 *           - The open and close positions are configured in the Settings menu
 *           - The oven door will open when the reflow is done, and close at 50C.
 *             The door is also closed when ControLeo2 is turned on.
+* 1.5       Minor improvements (15 July 2015)
+*           - Made code easier to read by using “F” macro for strings stored in flash
+*           - Minor adjustments to reflow values 
+*           - Restrict the maximum duty cycle for the boost element to 60%.  It
+*             should never need more than this!
+*           - Make thermocouple more tolerant of transient errors, including
+*             FAULT_OPEN
+* 1.6       Added ability to bake (26 March 2016)
+*           - Ability to bake was requested by a number of users, and was implemented
+*             by Bernhard Kraft and Mark Foster.  Bernhard's implementation was added
+*             to the code base.  This is a simple algorithm that only implements the
+*             "P" (proportional) of the PID algorithm.  Temperatures may overshoot
+*             initially, but for the rest of the baking time (up to 18 hours) the
+*             temperature will be a few degrees below the target temperature.
+*           - Added option to Setup menu to restart learning mode.
+*           - Added option to Setup menu to reset to factory mode (erase everything)
 *******************************************************************************/
 
 
@@ -113,29 +129,29 @@ void setup() {
 
   // Write the initial message on the LCD screen
   lcdPrintLine(0, "   ControLeo2");
-  lcdPrintLine(1, "Reflow Oven v1.5");
+  lcdPrintLine(1, "Reflow Oven v1.6");
   delay(100);
   playTones(TUNE_STARTUP);
   delay(3000);
-  lcd.clear();
   
   // Initialize the EEPROM, after flashing bootloader
   InitializeSettingsIfNeccessary();
+  lcd.clear();
   
   // Go straight to reflow menu if learning is complete
   if (getSetting(SETTING_LEARNING_MODE) == false)
     mode = 2;
-  
-  Serial.println(F("ControLeo2 Reflow Oven controller v1.5"));
+
+  Serial.println(F("ControLeo2 Reflow Oven controller v1.6"));
   
   // Make sure the oven door is closed
   setServoPosition(getSetting(SETTING_SERVO_CLOSED_DEGREES), 1000);
 }
 
 
-// The main menu has 3 options
-boolean (*action[NO_OF_MODES])() = {Testing, Config, Reflow};
-const char* modes[NO_OF_MODES] = {"Test Outputs?", "Setup?", "Start Reflow?"};
+// The main menu has 4 options
+boolean (*action[NO_OF_MODES])() = {Testing, Config, Reflow, Bake};
+const char* modes[NO_OF_MODES] = {"Test Outputs?", "Setup?", "Start Reflow?", "Start Baking?"};
 
 
 // This loop is executed 20 times per second
@@ -178,10 +194,10 @@ void loop()
       showMainMenu = true;
   }
   
-  // Execute this loop 20 times per second (every 50ms)
+  // Execute this loop 20 times per second (every 50ms).  Bake requires 200 times per second
   if (millis() < nextLoopTime)
     delay(nextLoopTime - millis());
-  nextLoopTime += 50;
+  nextLoopTime += (mode == MODE_BAKE? 5 : 50);
 }
 
 

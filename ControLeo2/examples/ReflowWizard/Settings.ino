@@ -21,6 +21,10 @@ int getSetting(int settingNum) {
   if (settingNum == SETTING_MAX_TEMPERATURE)
     return val + SETTING_TEMPERATURE_OFFSET;
 
+  // Bake temperature is modified before saving
+  if (settingNum == SETTING_BAKE_TEMPERATURE)
+    return val * SETTING_BAKE_TEMPERATURE_STEP;
+
   return val;
 }
 
@@ -52,6 +56,10 @@ void setSetting(int settingNum, int value) {
       EEPROM.write(settingNum, value - SETTING_TEMPERATURE_OFFSET);
       break;
       
+    case SETTING_BAKE_TEMPERATURE:
+      EEPROM.write(settingNum, value / SETTING_BAKE_TEMPERATURE_STEP);
+      break;
+
     default:
       EEPROM.write(settingNum, value);
       break;
@@ -70,6 +78,8 @@ void InitializeSettingsIfNeccessary() {
     // Set the servos to neutral positions (90 degrees)
     setSetting(SETTING_SERVO_CLOSED_DEGREES, 90);
     setSetting(SETTING_SERVO_OPEN_DEGREES, 90);
+    // Set default baking temperature
+    setSetting(SETTING_BAKE_TEMPERATURE, 40);
   }
   
   // Legacy support - Initialize the rest of EEPROM for upgrade from 1.x to 1.4
@@ -78,7 +88,32 @@ void InitializeSettingsIfNeccessary() {
       EEPROM.write(i, 0);
     setSetting(SETTING_SERVO_CLOSED_DEGREES, 90);
     setSetting(SETTING_SERVO_OPEN_DEGREES, 90);
+    setSetting(SETTING_BAKE_TEMPERATURE, 40);
   }
 }
 
+
+// Returns the bake duration, in seconds (max 65536 = 18 hours)
+uint16_t getBakeSeconds(int duration)
+{
+  uint16_t minutes = 0;
+
+  // Sanity check on the parameter
+  if (duration >= SETTING_BAKE_MAX_DURATION)
+    return 0;
+  
+  // 5 to 60 minutes, at 1 minute increments
+  if (duration <= 55)
+    minutes = duration + 5;
+
+  // 1 hour to 4 hours at 5 minute increments
+  else if (duration <= 91)
+    minutes = (duration - 55) * 5 + 60;
+
+  // 4+ hours in 10 minute increments
+  else
+    minutes = (duration - 91) * 10 + 240;
+
+  return minutes * 60;
+}
 
