@@ -80,7 +80,7 @@
 *             should never need more than this!
 *           - Make thermocouple more tolerant of transient errors, including
 *             FAULT_OPEN
-* 1.6       Added ability to bake (26 March 2016)
+* 1.6       Added ability to bake (29 March 2016)
 *           - Ability to bake was requested by a number of users, and was implemented
 *             by Bernhard Kraft and Mark Foster.  Bernhard's implementation was added
 *             to the code base.  This is a simple algorithm that only implements the
@@ -89,6 +89,9 @@
 *             temperature will be a few degrees below the target temperature.
 *           - Added option to Setup menu to restart learning mode.
 *           - Added option to Setup menu to reset to factory mode (erase everything)
+* 1.7       Added support for cooling fan (7 June 2106)
+*           - Any of the 4 outputs can be configured to control a cooling fan
+*           - When bake finishes, the servo will open the oven door (thanks jcwren)
 *******************************************************************************/
 
 
@@ -129,7 +132,7 @@ void setup() {
 
   // Write the initial message on the LCD screen
   lcdPrintLine(0, "   ControLeo2");
-  lcdPrintLine(1, "Reflow Oven v1.6");
+  lcdPrintLine(1, "Reflow Oven v1.7");
   delay(100);
   playTones(TUNE_STARTUP);
   delay(3000);
@@ -142,7 +145,7 @@ void setup() {
   if (getSetting(SETTING_LEARNING_MODE) == false)
     mode = 2;
 
-  Serial.println(F("ControLeo2 Reflow Oven controller v1.6"));
+  Serial.println(F("ControLeo2 Reflow Oven controller v1.7"));
   
   // Make sure the oven door is closed
   setServoPosition(getSetting(SETTING_SERVO_CLOSED_DEGREES), 1000);

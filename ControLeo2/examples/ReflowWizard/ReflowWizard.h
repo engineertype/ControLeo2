@@ -17,9 +17,10 @@
 #define TYPE_BOTTOM_ELEMENT                  2
 #define TYPE_BOOST_ELEMENT                   3
 #define TYPE_CONVECTION_FAN                  4
-#define NO_OF_TYPES                          5
+#define TYPE_COOLING_FAN                     5
+#define NO_OF_TYPES                          6
 
-const char *outputDescription[NO_OF_TYPES] = {"Unused", "Top", "Bottom", "Boost", "Fan"};
+const char *outputDescription[NO_OF_TYPES] = {"Unused", "Top", "Bottom", "Boost", "Convection Fan","Cooling Fan"};
 
 // Phases of reflow
 #define PHASE_INIT                           0    // Variable initialization

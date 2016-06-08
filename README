@@ -59,6 +59,9 @@ Reflow Wizard
 *        temperature will be a few degrees below the target temperature.
 *      - Added option to Setup menu to restart learning mode.
 *      - Added option to Setup menu to reset to factory mode (erase everything) 
+* 1.7 Added support for cooling fan (7 June 2106)
+*      - Any of the 4 outputs can be configured to control a cooling fan
+*      - When bake finishes, the servo will open the oven door (thanks jcwren)
 
 Oven door servo:
 ================

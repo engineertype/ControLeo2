@@ -267,11 +267,12 @@ public:
         Serial.println(F("Turning all heating elements off ..."));
         Serial.println(F("Open the oven door ..."));
 
-        // Make sure all the elements are off (keep convection fans on)
-        for (int i=0; i<4; i++) {
-          if (outputType[i] != TYPE_CONVECTION_FAN)
-            digitalWrite(i+4, LOW);
-        }
+        // Make sure all the elements are off (keep convection and cooling fans on)
+        for (int i=0; i<4; i++)
+          digitalWrite(i+4, outputType[i] == TYPE_CONVECTION_FAN || outputType[i] == TYPE_COOLING_FAN ? HIGH: LOW);
+ 
+        // If a servo is attached, use it to open the door over 10 seconds
+        setServoPosition(getSetting(SETTING_SERVO_OPEN_DEGREES), 10000);
 
         playTones(TUNE_REFLOW_DONE);
       }
@@ -294,7 +295,7 @@ public:
       break;
 
     case BAKING_PHASE_ABORT: // The baking is finished
-      Serial.println(F("Reflow is done!"));
+      Serial.println(F("Baking is done!"));
       // Turn all elements and fans off
       for (i = 4; i < 8; i++)
         digitalWrite(i, LOW);
@@ -474,6 +475,7 @@ protected:
     for (i=0; i<OUTPUT_COUNT; i++) {
       switch (this->outputType[i]) {
       case TYPE_UNUSED:
+      case TYPE_COOLING_FAN:
         this->elementDutyCycle[i] = 0;
         break;
 
@@ -512,6 +514,7 @@ protected:
     for (i=0; i<OUTPUT_COUNT; i++) {
       switch (this->outputType[i]) {
       case TYPE_UNUSED:
+      case TYPE_COOLING_FAN:
         this->elementDutyCycle[i] = 0;
         break;
 

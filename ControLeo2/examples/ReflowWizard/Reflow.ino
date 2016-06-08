@@ -109,6 +109,7 @@ boolean Reflow() {
         for (i=0; i<4; i++) {
           switch (outputType[i]) {
             case TYPE_UNUSED:
+            case TYPE_COOLING_FAN:
               setSetting(SETTING_PRESOAK_D4_DUTY_CYCLE + i, 0);
               setSetting(SETTING_SOAK_D4_DUTY_CYCLE + i, 0);
               setSetting(SETTING_REFLOW_D4_DUTY_CYCLE + i, 0);
@@ -294,7 +295,7 @@ boolean Reflow() {
             
           // Turn all the elements on to get to temperature quickly
           for (i=0; i<4; i++) {
-            if (outputType[i] != TYPE_UNUSED)
+            if (outputType[i] == TYPE_TOP_ELEMENT || outputType[i] == TYPE_BOTTOM_ELEMENT || outputType[i] == TYPE_BOOST_ELEMENT)
               phase[reflowPhase].elementDutyCycle[i] = 100;
           }
             
@@ -312,8 +313,8 @@ boolean Reflow() {
       
       // Turn the output on or off based on its duty cycle
       for (i=0; i< 4; i++) {
-        // Skip unused elements
-        if (outputType[i] == TYPE_UNUSED)
+        // Skip unused elements and cooling fan
+        if (outputType[i] == TYPE_UNUSED || outputType[i] == TYPE_COOLING_FAN)
           continue;
         // Turn all the elements on at the start of the presoak
         if (reflowPhase == PHASE_PRESOAK && currentTemperature < (phase[reflowPhase].endTemperature * 3 / 5)) {
@@ -382,6 +383,12 @@ boolean Reflow() {
         setServoPosition(getSetting(SETTING_SERVO_OPEN_DEGREES), 10000);
         // Play a tune to let the user know the door should be opened
         playTones(TUNE_REFLOW_DONE);
+
+        // Turn on the cooling fan
+        for (int i=0; i<4; i++) {
+          if (outputType[i] == TYPE_COOLING_FAN)
+            digitalWrite(i+4, HIGH);
+        }
       }
       // Update the temperature roughly once per second
       if (counter++ % 20 == 0)
