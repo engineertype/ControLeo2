@@ -92,6 +92,15 @@
 * 1.7       Added support for cooling fan (7 June 2106)
 *           - Any of the 4 outputs can be configured to control a cooling fan
 *           - When bake finishes, the servo will open the oven door (thanks jcwren)
+* 1.8       Major changes to bake functionality (22 June 2016)
+*           - Complete rewrite of bake functionality.  Users reported that ControLeo2
+*             would sometimes freeze during bake, leaving one or more elements on.
+*           - Added Integral (the "I" of PID) to bake, so temperatures come closer
+*             to desired bake temperature
+*           - Added bake countdown timer to LCD screen
+*           - Fixed bug where oven door would not close once bake completed.
+* 1.9       Minor change to bake (25 June 2016)
+*           - Initial bake duty cycle is based on desired bake temperature
 *******************************************************************************/
 
 
@@ -132,7 +141,7 @@ void setup() {
 
   // Write the initial message on the LCD screen
   lcdPrintLine(0, "   ControLeo2");
-  lcdPrintLine(1, "Reflow Oven v1.7");
+  lcdPrintLine(1, "Reflow Oven v1.9");
   delay(100);
   playTones(TUNE_STARTUP);
   delay(3000);
@@ -145,7 +154,7 @@ void setup() {
   if (getSetting(SETTING_LEARNING_MODE) == false)
     mode = 2;
 
-  Serial.println(F("ControLeo2 Reflow Oven controller v1.7"));
+  Serial.println(F("ControLeo2 Reflow Oven controller v1.9"));
   
   // Make sure the oven door is closed
   setServoPosition(getSetting(SETTING_SERVO_CLOSED_DEGREES), 1000);
@@ -197,10 +206,10 @@ void loop()
       showMainMenu = true;
   }
   
-  // Execute this loop 20 times per second (every 50ms).  Bake requires 200 times per second
+  // Execute this loop 20 times per second (every 50ms). 
   if (millis() < nextLoopTime)
     delay(nextLoopTime - millis());
-  nextLoopTime += (mode == MODE_BAKE? 5 : 50);
+  nextLoopTime += 50;
 }
 
 

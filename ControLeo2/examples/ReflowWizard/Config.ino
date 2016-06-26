@@ -137,9 +137,9 @@ boolean Config() {
       switch (getButton()) {
         case CONTROLEO_BUTTON_TOP:
           // Increase the temperature
-          bakeTemperature += SETTING_BAKE_TEMPERATURE_STEP;
-          if (bakeTemperature > 280)
-            bakeTemperature = 40;
+          bakeTemperature += BAKE_TEMPERATURE_STEP;
+          if (bakeTemperature > BAKE_MAX_TEMPERATURE)
+            bakeTemperature = BAKE_MIN_TEMPERATURE;
           lcd.setCursor(0, 1);
           lcd.print(bakeTemperature);
           lcd.print("\1C ");
@@ -158,15 +158,15 @@ boolean Config() {
         lcdPrintLine(0, "Bake duration");
         lcdPrintLine(1, "");
         bakeDuration = getSetting(SETTING_BAKE_DURATION);
-        displayDuration(getBakeSeconds(bakeDuration));
+        displayDuration(0, getBakeSeconds(bakeDuration));
       }
 
       // Was a button pressed?
       switch (getButton()) {
         case CONTROLEO_BUTTON_TOP:
           // Increase the duration
-          bakeDuration = ++bakeDuration % SETTING_BAKE_MAX_DURATION;
-          displayDuration(getBakeSeconds(bakeDuration));
+          bakeDuration = ++bakeDuration % BAKE_MAX_DURATION;
+          displayDuration(0, getBakeSeconds(bakeDuration));
           break;
         case CONTROLEO_BUTTON_BOTTOM:
           // Save the temperature
@@ -253,16 +253,21 @@ void displayServoDegrees(int degrees) {
 }
 
 
-void displayDuration(uint16_t duration) {
-  lcd.setCursor(0, 1);
+void displayDuration(int offset, uint16_t duration) {
+  lcd.setCursor(offset, 1);
   if (duration >= 3600) {
     lcd.print((duration / 3600));
     lcd.print("h ");
   }
-  duration = duration % 3600;
-  lcd.print((duration / 60));
-  lcd.print("m    ");
+  lcd.print((duration % 3600) / 60);
+  lcd.print("m ");
 
+  if (duration < 3600) {
+    lcd.print(duration % 60);
+    lcd.print("s ");
+  }
+
+  lcd.print("   ");
 }
 
 

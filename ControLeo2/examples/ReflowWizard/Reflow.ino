@@ -525,13 +525,34 @@ void displayAdjustmentsMadeContinue(boolean willContinue) {
 
 
 // For debugging you can use this function to simulate the thermocouple
-/*double getTemperature() {
+/*double getTemperature(int bakeDutyCycle) {
   static double counterTemp = 29.0;
   static int phase = 0;
   double diff[] = {0.08, 0.03, 0.05, -0.26}; 
   double tempChange[] = {140, 215, 255, 40};
+  static long counter = 0;
+  static double offset = 0.001;
+
+  static double dir = 0.19;
+
+  if (bakeDutyCycle == 100)
+    offset = 0.001;
+  if ((++counter % 20000) == 0) {
+    Serial.print("Offset was ");
+    Serial.print(int (offset * 1000));
+    Serial.print("  Duty = ");
+    Serial.println(bakeDutyCycle);
+    offset += 0.0005;
+  }
+
+  if (counterTemp < 99 && counterTemp > 96)
+    dir = (0.0003 * bakeDutyCycle) - offset;
+  if (counterTemp > 100.5)
+    dir = -0.013;
+  counterTemp += dir;
+  return counterTemp;
   
-  if (diff[phase] > 0 && counterTemp > tempChange[phase])
+/*  if (diff[phase] > 0 && counterTemp > tempChange[phase])
     phase++;
   else if (diff[phase] < 0 && counterTemp < tempChange[phase])
     phase++;

@@ -19,6 +19,7 @@
 #define TYPE_CONVECTION_FAN                  4
 #define TYPE_COOLING_FAN                     5
 #define NO_OF_TYPES                          6
+#define isHeatingElement(x)                  (x == TYPE_TOP_ELEMENT || x == TYPE_BOTTOM_ELEMENT || x == TYPE_BOOST_ELEMENT)
 
 const char *outputDescription[NO_OF_TYPES] = {"Unused", "Top", "Bottom", "Boost", "Convection Fan","Cooling Fan"};
 
@@ -33,12 +34,13 @@ const char *outputDescription[NO_OF_TYPES] = {"Unused", "Top", "Bottom", "Boost"
 #define PHASE_ABORT_REFLOW                   7    // The reflow was aborted or completed.
 
 #define BAKING_PHASE_INIT                    0    // Initialize baking, check oven temperature
-#define BAKING_PHASE_HEATUP                  1    // As long as the oven hasn't reached baking (temperature-10°)
+#define BAKING_PHASE_HEATUP                  1    // Heat up the oven rapidly to just under the desired temperature
 #define BAKING_PHASE_BAKE                    2    // The main baking phase. Just keep the oven temperature constant
-#define BAKING_PHASE_COOLDOWN                3    // Wait till the oven has cooled down to 50°C
-#define BAKING_PHASE_ABORT                   4    // Baking was aborted or completed
+#define BAKING_PHASE_START_COOLING           3    // Start the cooling process
+#define BAKING_PHASE_COOLING                 4    // Wait till the oven has cooled down to 50°C
+#define BAKING_PHASE_ABORT                   5    // Baking was aborted or completed
 const char *phaseDescription[] = {"", "Presoak", "Soak", "Reflow", "Waiting", "Cooling", "Cool - open door", "Abort"};
-const char *bakingPhaseDescription[] = {"", "Heating", "Baking", "Cooling", "Abort"};
+const char *bakingPhaseDescription[] = {"", "Heating", "Baking", "", "Cooling", ""};
 
 // Tunes used to indication various actions or status
 #define TUNE_STARTUP                         0
@@ -57,6 +59,8 @@ const char *bakingPhaseDescription[] = {"", "Heating", "Baking", "Cooling", "Abo
 #define SETTING_D7_TYPE                       4    // Element type controlled by D7 (or fan, unused)
 #define SETTING_MAX_TEMPERATURE               5    // Maximum oven temperature.  Relow curve will be based on this (stored temp is offset by 150 degrees)
 #define SETTING_SETTINGS_CHANGED              6    // Settings have changed.  Relearn duty cycles
+#define SETTING_BAKE_TEMPERATURE              7    // The baking temperature (divided by 5)
+#define SETTING_BAKE_DURATION                 8    // The baking duration (see getBakeSeconds)
 
 // Learned settings
 #define SETTING_LEARNING_MODE                 10   // ControLeo is learning oven response and will make adjustments
@@ -74,12 +78,12 @@ const char *bakingPhaseDescription[] = {"", "Heating", "Baking", "Cooling", "Abo
 #define SETTING_REFLOW_D7_DUTY_CYCLE          22   // Duty cycle (0-100) that D4 must be used during reflow
 #define SETTING_SERVO_OPEN_DEGREES            23   // The position the servo should be in when the door is open
 #define SETTING_SERVO_CLOSED_DEGREES          24   // The position the servo should be in when the door is closed
-#define SETTING_BAKE_TEMPERATURE              25   // The baking temperature (divided by 5)
-#define SETTING_BAKE_DURATION                 26   // The baking duration (see getBakeSeconds)
 
-#define SETTING_TEMPERATURE_OFFSET            150  // To allow temperature to be saved in 8-bits (0-255)
-#define SETTING_BAKE_TEMPERATURE_STEP         5    // Allows to store the whole baking temperature range in one byte
-#define SETTING_BAKE_MAX_DURATION             133  // 133 = 18 hours (see getBakeSeconds)
+#define TEMPERATURE_OFFSET                    150  // To allow temperature to be saved in 8-bits (0-255)
+#define BAKE_TEMPERATURE_STEP                 5    // Allows the storing of the temperature range in one byte
+#define BAKE_MAX_DURATION                     176  // 176 = 18 hours (see getBakeSeconds)
+#define BAKE_MIN_TEMPERATURE                  40   // Minimum temperature for baking
+#define BAKE_MAX_TEMPERATURE                  200  // Maximum temperature for baking
 
 // Thermocouple
 #define THERMOCOUPLE_FAULT(x)                 (x == FAULT_OPEN || x == FAULT_SHORT_GND || x == FAULT_SHORT_VCC)

@@ -19,11 +19,11 @@ int getSetting(int settingNum) {
   
   // The maximum temperature has an offset to allow it to be saved in 8-bits (0 - 255)
   if (settingNum == SETTING_MAX_TEMPERATURE)
-    return val + SETTING_TEMPERATURE_OFFSET;
+    return val + TEMPERATURE_OFFSET;
 
   // Bake temperature is modified before saving
   if (settingNum == SETTING_BAKE_TEMPERATURE)
-    return val * SETTING_BAKE_TEMPERATURE_STEP;
+    return val * BAKE_TEMPERATURE_STEP;
 
   return val;
 }
@@ -53,11 +53,11 @@ void setSetting(int settingNum, int value) {
       if (abs(getSetting(settingNum) - value) > 5)
         EEPROM.write(SETTING_LEARNING_MODE, true);
       // Write the new maximum temperature
-      EEPROM.write(settingNum, value - SETTING_TEMPERATURE_OFFSET);
+      EEPROM.write(settingNum, value - TEMPERATURE_OFFSET);
       break;
       
     case SETTING_BAKE_TEMPERATURE:
-      EEPROM.write(settingNum, value / SETTING_BAKE_TEMPERATURE_STEP);
+      EEPROM.write(settingNum, value / BAKE_TEMPERATURE_STEP);
       break;
 
     default:
@@ -79,7 +79,7 @@ void InitializeSettingsIfNeccessary() {
     setSetting(SETTING_SERVO_CLOSED_DEGREES, 90);
     setSetting(SETTING_SERVO_OPEN_DEGREES, 90);
     // Set default baking temperature
-    setSetting(SETTING_BAKE_TEMPERATURE, 40);
+    setSetting(SETTING_BAKE_TEMPERATURE, BAKE_MIN_TEMPERATURE);
   }
   
   // Legacy support - Initialize the rest of EEPROM for upgrade from 1.x to 1.4
@@ -88,7 +88,7 @@ void InitializeSettingsIfNeccessary() {
       EEPROM.write(i, 0);
     setSetting(SETTING_SERVO_CLOSED_DEGREES, 90);
     setSetting(SETTING_SERVO_OPEN_DEGREES, 90);
-    setSetting(SETTING_BAKE_TEMPERATURE, 40);
+    setSetting(SETTING_BAKE_TEMPERATURE, BAKE_MIN_TEMPERATURE);
   }
 }
 
@@ -96,11 +96,11 @@ void InitializeSettingsIfNeccessary() {
 // Returns the bake duration, in seconds (max 65536 = 18 hours)
 uint16_t getBakeSeconds(int duration)
 {
-  uint16_t minutes = 0;
+  uint16_t minutes;
 
   // Sanity check on the parameter
-  if (duration >= SETTING_BAKE_MAX_DURATION)
-    return 0;
+  if (duration >= BAKE_MAX_DURATION)
+    return 5;
   
   // 5 to 60 minutes, at 1 minute increments
   if (duration <= 55)
