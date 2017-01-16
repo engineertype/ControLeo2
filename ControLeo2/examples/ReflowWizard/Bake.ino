@@ -76,6 +76,21 @@ boolean Bake() {
       Serial.print(F("Baking duration = "));
       Serial.println(bakeDuration);
       
+      // Don't allow bake if the outputs are not configured
+      for (i=0; i<4; i++)
+        if (isHeatingElement(outputType[i]))
+          break;
+      if (i == 4) {
+        lcdPrintLine(0, "Please configure");
+        lcdPrintLine(1, " outputs first! ");
+        Serial.println(F("Outputs must be configured before baking"));
+        
+        // Abort the baking
+        bakePhase = BAKING_PHASE_ABORT;
+        delay(3000);
+        break;
+      }
+
       // If there is a convection fan then turn it on now
       for (i=0; i< 4; i++) {
         if (outputType[i] == TYPE_CONVECTION_FAN)

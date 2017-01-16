@@ -101,6 +101,12 @@
 *           - Fixed bug where oven door would not close once bake completed.
 * 1.9       Minor change to bake (25 June 2016)
 *           - Initial bake duty cycle is based on desired bake temperature
+* 2.0       Minor improvements (15 January 2017)
+*           - Prevent bake/reflow before outputs are configured
+*           - Limit top element to 80% power.  There is never a good reason to go 
+*             higher than this.         
+*           - Minor tweaks to learning mode, to reduce number of times this needs to
+*             be run.
 *******************************************************************************/
 
 
@@ -141,7 +147,7 @@ void setup() {
 
   // Write the initial message on the LCD screen
   lcdPrintLine(0, "   ControLeo2");
-  lcdPrintLine(1, "Reflow Oven v1.9");
+  lcdPrintLine(1, "Reflow Oven v2.0");
   delay(100);
   playTones(TUNE_STARTUP);
   delay(3000);
@@ -154,7 +160,7 @@ void setup() {
   if (getSetting(SETTING_LEARNING_MODE) == false)
     mode = 2;
 
-  Serial.println(F("ControLeo2 Reflow Oven controller v1.9"));
+  Serial.println(F("ControLeo2 Reflow Oven controller v2.0"));
   
   // Make sure the oven door is closed
   setServoPosition(getSetting(SETTING_SERVO_CLOSED_DEGREES), 1000);

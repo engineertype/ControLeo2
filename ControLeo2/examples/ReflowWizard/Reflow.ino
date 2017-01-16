@@ -86,6 +86,20 @@ boolean Reflow() {
         outputType[i] = getSetting(SETTING_D4_TYPE + i);
       // Get the maximum temperature
       maxTemperature = getSetting(SETTING_MAX_TEMPERATURE);
+
+      // Don't allow reflow if the outputs are not configured
+      for (i=0; i<4; i++)
+        if (isHeatingElement(outputType[i]))
+          break;
+      if (i == 4) {
+        lcdPrintLine(0, "Please configure");
+        lcdPrintLine(1, " outputs first! ");
+        Serial.println(F("Outputs must be configured before reflow"));
+        
+        // Abort the reflow
+        reflowPhase = PHASE_ABORT_REFLOW;
+        break;
+      }
       
       // If the settings have changed then set up learning mode
       if (getSetting(SETTING_SETTINGS_CHANGED) == true) {
@@ -154,7 +168,7 @@ boolean Reflow() {
           case PHASE_PRESOAK:
             phase[i].endTemperature = maxTemperature * 3 / 5; // J-STD-20 gives 150C
             phase[i].phaseMinDuration = 60;
-            phase[i].phaseMaxDuration = 100;
+            phase[i].phaseMaxDuration = 110;
             break;
           case PHASE_SOAK:
             phase[i].endTemperature = maxTemperature * 4 / 5; // J-STD-20 gives 200C
@@ -210,15 +224,15 @@ boolean Reflow() {
           Serial.println(debugBuffer);
           // Too little time was spent in this phase
           if (learningMode) {
-            // Were the settings close to being right for this phase?  Within 5 seconds?
-            if (phase[reflowPhase].phaseMinDuration - ((currentTime - phaseStartTime) / 1000) < 5) {
+            // Were the settings close to being right for this phase?  Within 8 seconds?
+            if (phase[reflowPhase].phaseMinDuration - ((currentTime - phaseStartTime) / 1000) < 8) {
               // Reduce the duty cycle for the elements for this phase, but continue with this run
-              adjustPhaseDutyCycle(reflowPhase, -4);
+              adjustPhaseDutyCycle(reflowPhase, -5);
               displayAdjustmentsMadeContinue(true);
             }
             else {
               // The oven heated up way too fast
-              adjustPhaseDutyCycle(reflowPhase, -7);
+              adjustPhaseDutyCycle(reflowPhase, -8);
 
               // Abort this run
               lcdPrintPhaseMessage(reflowPhase, "Too fast");
@@ -265,18 +279,18 @@ boolean Reflow() {
         if (learningMode) {
           double temperatureDelta = phase[reflowPhase].endTemperature - currentTemperature;
                     
-          if (temperatureDelta <= 3) {
+          if (temperatureDelta <= 5) {
             // Almost made it!  Make a small adjustment to the duty cycles.  Continue with the reflow
             adjustPhaseDutyCycle(reflowPhase, 4);
             displayAdjustmentsMadeContinue(true);
-            phase[reflowPhase].phaseMaxDuration += 15;
+            phase[reflowPhase].phaseMaxDuration += 20;
           }
           else {
             // A more dramatic temperature increase is needed for this phase
             if (temperatureDelta < 10)
-              adjustPhaseDutyCycle(reflowPhase, 8);
+              adjustPhaseDutyCycle(reflowPhase, 9);
             else
-              adjustPhaseDutyCycle(reflowPhase, 15);
+              adjustPhaseDutyCycle(reflowPhase, 18);
               
             // Abort this run
             lcdPrintPhaseMessage(reflowPhase, "Too slow");
@@ -295,13 +309,23 @@ boolean Reflow() {
             
           // Turn all the elements on to get to temperature quickly
           for (i=0; i<4; i++) {
-            if (outputType[i] == TYPE_TOP_ELEMENT || outputType[i] == TYPE_BOTTOM_ELEMENT || outputType[i] == TYPE_BOOST_ELEMENT)
-              phase[reflowPhase].elementDutyCycle[i] = 100;
+            switch(outputType[i]) {
+              case TYPE_BOTTOM_ELEMENT:
+                phase[reflowPhase].elementDutyCycle[i] = 100;
+                break;
+              case TYPE_TOP_ELEMENT:
+                phase[reflowPhase].elementDutyCycle[i] = 80;
+                break;
+              case TYPE_BOOST_ELEMENT:
+                phase[reflowPhase].elementDutyCycle[i] = 60;
+                break;
+                
+            }
           }
             
-          // Extend this phase by 5 seconds, or abort the reflow if it has taken too long
+          // Extend this phase by 10 seconds, or abort the reflow if it has taken too long
           if (phase[reflowPhase].phaseMaxDuration < 200)
-            phase[reflowPhase].phaseMaxDuration += 5;
+            phase[reflowPhase].phaseMaxDuration += 10;
           else {
             lcdPrintPhaseMessage(reflowPhase, "Too slow");
             lcdPrintLine(1, "Aborting ...");
@@ -317,7 +341,7 @@ boolean Reflow() {
         if (outputType[i] == TYPE_UNUSED || outputType[i] == TYPE_COOLING_FAN)
           continue;
         // Turn all the elements on at the start of the presoak
-        if (reflowPhase == PHASE_PRESOAK && currentTemperature < (phase[reflowPhase].endTemperature * 3 / 5)) {
+        if (reflowPhase == PHASE_PRESOAK && currentTemperature < (phase[reflowPhase].endTemperature * 3 / 5) - 10) {
           digitalWrite(4 + i, HIGH);
           continue;
         }
@@ -443,32 +467,36 @@ boolean Reflow() {
 
 // Adjust the duty cycle for all elements by the given adjustment value
 void adjustPhaseDutyCycle(int phase, int adjustment) {
-  int newDutyCycle;
   sprintf(debugBuffer, "Adjusting duty cycles for %s phase by %d", phaseDescription[phase], adjustment);
   Serial.println(debugBuffer);
   // Loop through the 4 outputs
   for (int i=0; i< 4; i++) {
     int dutySetting = SETTING_PRESOAK_D4_DUTY_CYCLE + ((phase-1) * 4) + i;
-    newDutyCycle = getSetting(dutySetting) + adjustment;
-    // Duty cycle must be between 0 and 100%
-    newDutyCycle = constrain(newDutyCycle, 0, 100);
-    switch(getSetting(SETTING_D4_TYPE + i)) {
+    int newDutyCycle = getSetting(dutySetting) + adjustment;
+
+    switch (getSetting(SETTING_D4_TYPE + i)) {
       case TYPE_BOOST_ELEMENT:
         // To avoid overstressing the boost element (which is just a mold heater), don't allow more than a 60% duty cycle
+        // Also, this element is probably not optimally located in the oven and running it too hot may create an imbalance
         newDutyCycle = constrain(newDutyCycle, 0, 60);
-        // Fall through ...
+        break;
       case TYPE_TOP_ELEMENT:
+        // With IR radiation (if oven has IR elements) and insulation just above it, don't allow more than 80% duty cycle
+        newDutyCycle = constrain(newDutyCycle, 0, 80);
+        break;
       case TYPE_BOTTOM_ELEMENT:
-        sprintf(debugBuffer, "D%d (%s) changed from %d to %d", i+4, outputDescription[getSetting(SETTING_D4_TYPE + i)], getSetting(dutySetting), newDutyCycle);
-        Serial.println(debugBuffer);
-        // Save the new duty cycle
-        setSetting(dutySetting, newDutyCycle);
+        // Allow 100% duty cycle for the bottom element, since all heat will hit the aluminum tray
+        newDutyCycle = constrain(newDutyCycle, 0, 100);
         break;
-      
       default:
-        // Don't change the duty cycle if the output is unused, or used for a convection fan
-        break;
+        // Skip this output if it isn't a heating element (fan or unused)
+        continue;
     }
+    
+    sprintf(debugBuffer, "D%d (%s) changed from %d to %d", i+4, outputDescription[getSetting(SETTING_D4_TYPE + i)], getSetting(dutySetting), newDutyCycle);
+    Serial.println(debugBuffer);
+    // Save the new duty cycle
+    setSetting(dutySetting, newDutyCycle);
   }
 }
 

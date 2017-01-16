@@ -71,6 +71,12 @@ Reflow Wizard
 *      - Fixed bug where oven door would not close once bake completed.
 * 1.9  Minor change to bake (25 June 2016)
 *      - Initial bake duty cycle is based on desired bake temperature
+* 2.0  Minor improvements (15 January 2017)
+*      - Prevent bake/reflow before outputs are configured
+*      - Limit top element to 80% power.  There is never a good reason to go 
+*        higher than this.         
+*      - Minor tweaks to learning mode, to reduce number of times this needs to
+*        be run.
 
 
 Oven door servo:
