@@ -30,19 +30,19 @@ boolean Bake() {
   // Read the temperature
   currentTemperature = getCurrentTemperature();
   if (THERMOCOUPLE_FAULT(currentTemperature)) {
-    lcdPrintLine(0, "Thermocouple err");
+    lcdPrintLine_P(0, PSTR("Thermocouple err"));
     Serial.print(F("Thermocouple Error: "));
     switch ((int) currentTemperature) {
       case FAULT_OPEN:
-        lcdPrintLine(1, "Fault open");
+        lcdPrintLine_P(1, PSTR("Fault open"));
         Serial.println(F("Fault open"));
         break;
       case FAULT_SHORT_GND:
-        lcdPrintLine(1, "Short to GND");
+        lcdPrintLine_P(1, PSTR("Short to GND"));
         Serial.println(F("Short to ground"));
         break;
       case FAULT_SHORT_VCC:
-        lcdPrintLine(1, "Short to VCC");
+        lcdPrintLine_P(1, PSTR("Short to VCC"));
         break;
     }
     
@@ -55,8 +55,8 @@ boolean Bake() {
   // Abort the bake if a button is pressed
   if (getButton() != CONTROLEO_BUTTON_NONE) {
     bakePhase = BAKING_PHASE_ABORT;
-    lcdPrintLine(0, "Aborting bake");
-    lcdPrintLine(1, "Button pressed");
+    lcdPrintLine_P(0, PSTR("Aborting bake"));
+    lcdPrintLine_P(1, PSTR("Button pressed"));
     Serial.println(F("Button pressed.  Aborting bake ..."));
     delay(2000);
   }
@@ -81,8 +81,8 @@ boolean Bake() {
         if (isHeatingElement(outputType[i]))
           break;
       if (i == 4) {
-        lcdPrintLine(0, "Please configure");
-        lcdPrintLine(1, " outputs first! ");
+        lcdPrintLine_P(0, PSTR("Please configure"));
+        lcdPrintLine_P(1, PSTR(" outputs first! "));
         Serial.println(F("Outputs must be configured before baking"));
         
         // Abort the baking
@@ -100,7 +100,7 @@ boolean Bake() {
       // Move to the next phase
       bakePhase = BAKING_PHASE_HEATUP;
       lcdPrintLine(0, bakingPhaseDescription[bakePhase]);
-      lcdPrintLine(1, "");
+      lcdPrintLine_P(1, PSTR(""));
 
       // Start with a duty cycle proportional to the desired temperature
       bakeDutyCycle = map(bakeTemperature, 0, 250, 0, 100);

@@ -37,19 +37,19 @@ boolean Reflow() {
   // Read the temperature
   currentTemperature = getCurrentTemperature();
   if (THERMOCOUPLE_FAULT(currentTemperature)) {
-    lcdPrintLine(0, "Thermocouple err");
+    lcdPrintLine_P(0, PSTR("Thermocouple err"));
     Serial.print(F("Thermocouple Error: "));
     switch ((int) currentTemperature) {
       case FAULT_OPEN:
-        lcdPrintLine(1, "Fault open");
+        lcdPrintLine_P(1, PSTR("Fault open"));
         Serial.println(F("Fault open"));
         break;
       case FAULT_SHORT_GND:
-        lcdPrintLine(1, "Short to GND");
+        lcdPrintLine_P(1, PSTR("Short to GND"));
         Serial.println(F("Short to ground"));
         break;
       case FAULT_SHORT_VCC:
-        lcdPrintLine(1, "Short to VCC");
+        lcdPrintLine_P(1, PSTR("Short to VCC"));
         break;
     }
     
@@ -61,8 +61,8 @@ boolean Reflow() {
   // Abort the reflow if a button is pressed
   if (getButton() != CONTROLEO_BUTTON_NONE) {
     reflowPhase = PHASE_ABORT_REFLOW;
-    lcdPrintLine(0, "Aborting reflow");
-    lcdPrintLine(1, "Button pressed");
+    lcdPrintLine_P(0, PSTR("Aborting reflow"));
+    lcdPrintLine_P(1, PSTR("Button pressed"));
     Serial.println(F("Button pressed.  Aborting reflow ..."));
   }
   
@@ -72,8 +72,8 @@ boolean Reflow() {
       // Make sure the oven is cool.  This makes for more predictable/reliable reflows and
       // gives the SSR's time to cool down a bit.
       if (currentTemperature > 50.0) {
-        lcdPrintLine(0, "Temp > 50\1C");
-        lcdPrintLine(1, "Please wait...");
+        lcdPrintLine_P(0, PSTR("Temp > 50\1C"));
+        lcdPrintLine_P(1, PSTR("Please wait..."));
         Serial.println(F("Oven too hot to start reflow.  Please wait ..."));
         
         // Abort the reflow
@@ -92,8 +92,8 @@ boolean Reflow() {
         if (isHeatingElement(outputType[i]))
           break;
       if (i == 4) {
-        lcdPrintLine(0, "Please configure");
-        lcdPrintLine(1, " outputs first! ");
+        lcdPrintLine_P(0, PSTR("Please configure"));
+        lcdPrintLine_P(1, PSTR(" outputs first! "));
         Serial.println(F("Outputs must be configured before reflow"));
         
         // Abort the reflow
@@ -105,8 +105,8 @@ boolean Reflow() {
       if (getSetting(SETTING_SETTINGS_CHANGED) == true) {
         setSetting(SETTING_SETTINGS_CHANGED, false);
         // Tell the user that learning mode is being enabled
-        lcdPrintLine(0, "Settings changed");
-        lcdPrintLine(1, "Initializing...");
+        lcdPrintLine_P(0, PSTR("Settings changed"));
+        lcdPrintLine_P(1, PSTR("Initializing..."));
         Serial.println(F("Settings changed by user.  Reinitializing element duty cycles and enabling learning mode ..."));
         
         // Turn learning mode on
@@ -184,8 +184,8 @@ boolean Reflow() {
       }
       // Let the user know if learning mode is on
       if (learningMode) {
-        lcdPrintLine(0, "Learning Mode");
-        lcdPrintLine(1, "is enabled");
+        lcdPrintLine_P(0, PSTR("Learning Mode"));
+        lcdPrintLine_P(1, PSTR("is enabled"));
         Serial.println(F("Learning mode is enabled.  Duty cycles may be adjusted automatically if necessary"));
         delay(3000);
       }
@@ -193,7 +193,7 @@ boolean Reflow() {
       // Move to the next phase
       reflowPhase = PHASE_PRESOAK;
       lcdPrintLine(0, phaseDescription[reflowPhase]);
-      lcdPrintLine(1, "");
+      lcdPrintLine_P(1, PSTR(""));
       
       // Display information about this phase
       serialDisplayPhaseData(reflowPhase, &phase[reflowPhase], outputType);
@@ -236,7 +236,7 @@ boolean Reflow() {
 
               // Abort this run
               lcdPrintPhaseMessage(reflowPhase, "Too fast");
-              lcdPrintLine(1, "Aborting ...");
+              lcdPrintLine_P(1, PSTR("Aborting ..."));
               reflowPhase = PHASE_ABORT_REFLOW;
               
               displayAdjustmentsMadeContinue(false);
@@ -294,7 +294,7 @@ boolean Reflow() {
               
             // Abort this run
             lcdPrintPhaseMessage(reflowPhase, "Too slow");
-            lcdPrintLine(1, "Aborting ...");
+            lcdPrintLine_P(1, PSTR("Aborting ..."));
             reflowPhase = PHASE_ABORT_REFLOW;
             displayAdjustmentsMadeContinue(false);
           }
@@ -328,7 +328,7 @@ boolean Reflow() {
             phase[reflowPhase].phaseMaxDuration += 10;
           else {
             lcdPrintPhaseMessage(reflowPhase, "Too slow");
-            lcdPrintLine(1, "Aborting ...");
+            lcdPrintLine_P(1, PSTR("Aborting ..."));
             reflowPhase = PHASE_ABORT_REFLOW;
             Serial.println(F("Aborting reflow.  Oven cannot reach required temperature!"));
           }
@@ -367,8 +367,8 @@ boolean Reflow() {
       if (firstTimeInPhase) {
         firstTimeInPhase = false;
         // Update the display
-        lcdPrintLine(0, "Reflow");
-        lcdPrintLine(1, " ");
+        lcdPrintLine_P(0, PSTR("Reflow"));
+        lcdPrintLine_P(1, PSTR(" "));
         Serial.println(F("******* Phase: Waiting *******"));
         Serial.println(F("Turning all heating elements off ..."));
         // Make sure all the elements are off (keep convection fans on)
@@ -400,7 +400,7 @@ boolean Reflow() {
       if (firstTimeInPhase) {
         firstTimeInPhase = false;
         // Update the display
-        lcdPrintLine(0, "Cool - open door");
+        lcdPrintLine_P(0, PSTR("Cool - open door"));
         Serial.println(F("******* Phase: Cooling *******"));
         Serial.println(F("Open the oven door ..."));
         // If a servo is attached, use it to open the door over 10 seconds
@@ -429,8 +429,8 @@ boolean Reflow() {
       if (firstTimeInPhase) {
         firstTimeInPhase = false;
         // Update the display
-        lcdPrintLine(0, "Okay to remove  ");
-        lcdPrintLine(1, "          boards");
+        lcdPrintLine_P(0, PSTR("Okay to remove  "));
+        lcdPrintLine_P(1, PSTR("          boards"));
         // Play a tune to let the user know the boards can be removed
         playTones(TUNE_REMOVE_BOARDS);
       }
@@ -441,8 +441,8 @@ boolean Reflow() {
       // Once the temperature drops below 50C a new reflow can be started
       if (currentTemperature < 50.0) {
         reflowPhase = PHASE_ABORT_REFLOW;
-        lcdPrintLine(0, "Reflow complete!");
-        lcdPrintLine(1, " ");
+        lcdPrintLine_P(0, PSTR("Reflow complete!"));
+        lcdPrintLine_P(1, PSTR(" "));
       }
       break;
       
@@ -580,7 +580,7 @@ void displayAdjustmentsMadeContinue(boolean willContinue) {
   counterTemp += dir;
   return counterTemp;
   
-/*  if (diff[phase] > 0 && counterTemp > tempChange[phase])
+  if (diff[phase] > 0 && counterTemp > tempChange[phase])
     phase++;
   else if (diff[phase] < 0 && counterTemp < tempChange[phase])
     phase++;

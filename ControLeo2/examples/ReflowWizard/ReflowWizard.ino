@@ -146,8 +146,8 @@ void setup() {
   initializeTimer();
 
   // Write the initial message on the LCD screen
-  lcdPrintLine(0, "   ControLeo2");
-  lcdPrintLine(1, "Reflow Oven v2.0");
+  lcdPrintLine_P(0, PSTR("   ControLeo2"));
+  lcdPrintLine_P(1, PSTR("Reflow Oven v2.0"));
   delay(100);
   playTones(TUNE_STARTUP);
   delay(3000);
@@ -185,7 +185,7 @@ void loop()
     if (drawMenu) {
       drawMenu = false;
       lcdPrintLine(0, modes[mode]);
-      lcdPrintLine(1, "          Yes ->");
+      lcdPrintLine_P(1, PSTR("          Yes ->"));
     }
     
     // Update the temperature roughtly once per second
@@ -271,7 +271,17 @@ void lcdPrintLine(int line, const char* str) {
   strncpy(buffer, str, strlen(str));
   lcd.print(buffer);
 }
-
+// Same as above using PROGMEM to save SRAM
+// works with constant strings only
+void lcdPrintLine_P(int line, const char* str) {
+  char buffer[17] = "                ";
+  // Sanity check on the parameters
+  if (line < 0 || line > 1 || !str || strlen_P(str) > 16)
+    return;
+  lcd.setCursor(0, line);
+  strncpy_P(buffer, str, strlen_P(str));
+  lcd.print(buffer);
+}
 
 // Displays the temperature in the bottom left corner of the LCD display
 void displayTemperature(double temperature) {
