@@ -21,7 +21,7 @@ boolean Config() {
     case 0:  // Set up the output types
       if (drawMenu) {
         drawMenu = false;
-        lcdPrintLine(0, "Dx is");
+        lcdPrintLine_P(0, PSTR("Dx is"));
         lcd.setCursor(1, 0);
         lcd.print(output);
         type = getSetting(SETTING_D4_TYPE - 4 + output);
@@ -58,8 +58,8 @@ boolean Config() {
     case 1:  // Get the maximum temperature
       if (drawMenu) {
         drawMenu = false;
-        lcdPrintLine(0, "Max temperature");
-        lcdPrintLine(1, "xxx\1C");
+        lcdPrintLine_P(0, PSTR("Max temperature"));
+        lcdPrintLine_P(1, PSTR("xxx\1C"));
         maxTemperature = getSetting(SETTING_MAX_TEMPERATURE);
         displayMaxTemperature(maxTemperature);
       }
@@ -84,8 +84,8 @@ boolean Config() {
     case 2:  // Get the servo open and closed settings
       if (drawMenu) {
         drawMenu = false;
-        lcdPrintLine(0, "Door servo");
-        lcdPrintLine(1, selectedServo == SETTING_SERVO_OPEN_DEGREES? "open:" : "closed:");
+        lcdPrintLine_P(0, PSTR("Door servo"));
+        lcdPrintLine_P(1, selectedServo == SETTING_SERVO_OPEN_DEGREES? PSTR("open:") : PSTR("closed:"));
         servoDegrees = getSetting(selectedServo);
         displayServoDegrees(servoDegrees);
         // Move the servo to the saved position
@@ -125,8 +125,8 @@ boolean Config() {
     case 3:  // Get bake temperature
       if (drawMenu) {
         drawMenu = false;
-        lcdPrintLine(0, "Bake temperature");
-        lcdPrintLine(1, "");
+        lcdPrintLine_P(0, PSTR("Bake temperature"));
+        lcdPrintLine_P(1, PSTR(""));
         bakeTemperature = getSetting(SETTING_BAKE_TEMPERATURE);
         lcd.setCursor(0, 1);
         lcd.print(bakeTemperature);
@@ -155,8 +155,8 @@ boolean Config() {
     case 4:  // Get bake duration
       if (drawMenu) {
         drawMenu = false;
-        lcdPrintLine(0, "Bake duration");
-        lcdPrintLine(1, "");
+        lcdPrintLine_P(0, PSTR("Bake duration"));
+        lcdPrintLine_P(1, PSTR(""));
         bakeDuration = getSetting(SETTING_BAKE_DURATION);
         displayDuration(0, getBakeSeconds(bakeDuration));
       }
@@ -165,7 +165,8 @@ boolean Config() {
       switch (getButton()) {
         case CONTROLEO_BUTTON_TOP:
           // Increase the duration
-          bakeDuration = ++bakeDuration % BAKE_MAX_DURATION;
+          bakeDuration++;
+          bakeDuration %= BAKE_MAX_DURATION;
           displayDuration(0, getBakeSeconds(bakeDuration));
           break;
         case CONTROLEO_BUTTON_BOTTOM:
@@ -180,13 +181,13 @@ boolean Config() {
       if (drawMenu) {
         drawMenu = false;
         if (getSetting(SETTING_LEARNING_MODE) == false) {
-          lcdPrintLine(0, "Restart learning");
-          lcdPrintLine(1, "mode?      No ->");
+          lcdPrintLine_P(0, PSTR("Restart learning"));
+          lcdPrintLine_P(1, PSTR("mode?      No ->"));
         }
         else
         {
-          lcdPrintLine(0, "Oven is in");
-          lcdPrintLine(1, "learning mode");
+          lcdPrintLine_P(0, PSTR("Oven is in"));
+          lcdPrintLine_P(1, PSTR("learning mode"));
         }
       }
       
@@ -206,16 +207,16 @@ boolean Config() {
      case 6: // Restore to factory settings
       if (drawMenu) {
         drawMenu = false;
-        lcdPrintLine(0, "Restore factory");
-        lcdPrintLine(1, "settings?  No ->");
+        lcdPrintLine_P(0, PSTR("Restore factory"));
+        lcdPrintLine_P(1, PSTR("settings?  No ->"));
       }
       
       // Was a button pressed?
       switch (getButton()) {
         case CONTROLEO_BUTTON_TOP:
           // Reset EEPROM to factory
-          lcdPrintLine(0, "Please wait ...");
-          lcdPrintLine(1, "");
+          lcdPrintLine_P(0, PSTR("Please wait ..."));
+          lcdPrintLine_P(1, PSTR(""));
           setSetting(SETTING_EEPROM_NEEDS_INIT, true);
           InitializeSettingsIfNeccessary();
 
